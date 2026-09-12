@@ -9,6 +9,20 @@ export default defineConfig({
         extends: true,
         test: { name: "unit", include: ["tests/unit/**/*.test.ts"], environment: "node" },
       },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          include: ["tests/integration/**/*.test.ts"],
+          environment: "node",
+          globalSetup: ["tests/integration/global-setup.ts"],
+          setupFiles: ["tests/integration/setup.ts"],
+          pool: "forks",
+          fileParallelism: false,
+          testTimeout: 30_000,
+          hookTimeout: 300_000,
+        },
+      },
     ],
   },
 });
