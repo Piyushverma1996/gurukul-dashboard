@@ -35,7 +35,7 @@ A private, mobile-first web app at **`dashboard.gurukulfc.com`** where Sharan ma
 |---|---|---|---|
 | D1 | Where it lives | Subdomain `dashboard.gurukulfc.com` as a **separate** Hostinger Node.js web app | Keeps deploys, secrets and cookies separate from the static marketing site, so a site change can't break the dashboard. The plan allows 5 web apps and 1 is used. |
 | D2 | Stack | **Next.js (App Router, TypeScript) full-stack** | One codebase and one deploy. Hostinger supports Next.js SSR and API routes. Every permission check runs on the server. |
-| D3 | Database | **Hostinger MySQL 8** via **Drizzle ORM** | Included in the plan at no extra cost. Relational data suits ledgers and reports. Hostinger hosts MySQL only. |
+| D3 | Database | **Hostinger's MySQL-compatible database (MariaDB on Web/Cloud plans)** via **Drizzle ORM** (mysql dialect, `mysql2` driver) | Included in the plan at no extra cost. Relational data suits ledgers and reports. To stay portable, the code uses no Drizzle relational-query API (it uses LATERAL joins, which MariaDB lacks), no JSON columns (JSON is stored as text) and `DATETIME` rather than `TIMESTAMP`. Local tests run on MySQL 8.4, and a MariaDB smoke test runs at first deploy. |
 | D4 | Auth | **Better Auth**: Google sign-in **and** phone number + password. No public sign-up. | Self-hosted, no per-user fees. Has a Drizzle adapter plus `phoneNumber` and `admin` plugins. |
 | D5 | UI | Tailwind CSS + shadcn/ui, installable **PWA** | Fast, accessible mobile UI; "Add to Home Screen" feels like an app. |
 | D6 | WhatsApp (Phase 1) | One-tap **`wa.me` deep links** with pre-filled message plus a reminder queue for bulk | Free and needs no Meta approval. The API comes in Phase 2. |
@@ -43,6 +43,7 @@ A private, mobile-first web app at **`dashboard.gurukulfc.com`** where Sharan ma
 | D8 | Monthly dues | Created **lazily** on the first request of the month (safe to run twice), plus an optional hPanel cron backup | Hostinger doesn't document scheduled jobs for Node apps, so dues must not depend on a cron. |
 | D9 | Batches | Fixed batches: center + age group + fixed weekdays and time; head coach plus optional assistants; **one batch per student** | Matches how the academy runs. |
 | D10 | Timezone and money | All dates in **Asia/Kolkata**; money stored as **integer rupees** | Month boundaries and "today" must match India. Fees are whole rupees. |
+| D11 | Backup & reference | One-way daily mirror of the database to a **Google Sheet** owned by the Gurukul Google account (`shrigurshalagurukul@gmail.com`), plus a **Sync now** button | Quick, readable backup Sharan can open anywhere. MySQL stays the source of truth. |
 
 Rejected alternatives: **Vite + Supabase.** Adds a vendor, the free tier pauses when idle, and the browser talks directly to the DB, so security relies on flawless row-level-security rules. **Vite + Express + MySQL.** Two codebases for no gain. **Firebase.** Its document database is a poor fit for ledgers and reporting.
 
@@ -65,13 +66,38 @@ Rejected alternatives: **Vite + Supabase.** Adds a vendor, the free tier pauses 
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | From step 4 |
 | `CRON_SECRET` | Random string guarding `/api/cron/*` |
 | `APP_TIMEZONE` | `Asia/Kolkata` |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Base64 of the service-account key used for the Sheets backup (§3.3) |
+| `GOOGLE_SHEET_ID` | ID of the backup Google Sheet |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PHONE` | Used once by the seed script: `shrigurshalagurukul@gmail.com` and Sharan's phone |
 
 6. **Optional cron backup:** hPanel → Advanced → Cron Jobs → daily 00:15 IST: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://dashboard.gurukulfc.com/api/cron/generate-dues`.
-7. **Bootstrap admin:** a one-off seed script creates Sharan's admin account, the 5 centers and default settings.
+7. **Bootstrap admin:** a one-off seed script creates the admin account, the 5 centers and default settings. The account's Google sign-in is **shrigurshalagurukul@gmail.com**; phone login uses `SEED_ADMIN_PHONE`, with a temporary password that must be changed on first login.
+8. **Google Sheets backup** (§3.3): in the same Google Cloud project, enable the Sheets API and create a service account + JSON key. Create the Sheet in the Gurukul Google account and share it with the service account's email as Editor.
 
 ### 3.2 Environments
 - **Local:** Node 22 + a local MySQL 8 (or Docker) using `.env.local`.
 - **Production:** Hostinger. Migrations run with `drizzle-kit migrate` as part of the build/start step.
+
+### 3.3 Google Sheets backup mirror
+- **What:** a Google Sheet, "Gurukul Dashboard — Backup", owned by **shrigurshalagurukul@gmail.com**, holding a **one-way mirror** (DB → Sheet) of the data. MySQL stays the source of truth; anything typed into the Sheet is overwritten at the next sync.
+- **Tabs:**
+  - `Summary`: month metrics per center
+  - `Students`
+  - `Batches`
+  - `Coaches`: name, role, phone, batches; no auth data
+  - `Dues`: all months
+  - `Payments`: all months
+  - `Attendance`: last 60 days, one row per mark
+  - `Attendance Monthly`: present, absent, excused and % per student per month
+  - `Sync Log`
+- **How:** a Google Cloud **service account** writes via the Sheets API. Each tab is cleared and rewritten in one `batchUpdate` / `values.batchUpdate` call per tab, and `Sync Log` records the timestamp, row counts and outcome.
+- **When:**
+  - automatically once a day, on the first authenticated request after 00:00 IST, run after the response is sent so nobody waits (guard: `settings.last_sheets_sync_date`)
+  - optional hPanel cron → `POST /api/cron/sheets-backup`
+  - the **Sync now** button in Settings (admin only)
+- **Failure handling:** a sync failure never blocks the app. The error is saved and shown in Settings ("Last sync failed at … : reason"), and the next trigger retries.
+- **Privacy:** the Sheet holds minors' names and parent phone numbers. Share it only with the Gurukul account (and Sharan's personal account if wanted), never as "anyone with the link". Coaches don't get access.
+- **Cost:** free. One sync a day is far inside the Sheets API free quota.
 
 ---
 
@@ -167,7 +193,7 @@ Resolution rule: the most specific match wins (center + age > center only > age 
 
 **`audit_log`**: `actor_id`, `action` (e.g. `payment.verify`, `due.waive`, `attendance.override`), `entity`, `entity_id`, `before_json?`, `after_json?`, `at`.
 
-**`settings`** (key/value): `grace_days` (7), `reminder_template`, `paytm_number`, `academy_whatsapp_number`, `proration_rounding` (50), `advance_max_months` (12), `coach_attendance_edit_days` (7), `last_dues_month` (internal guard for rule 6.2, e.g. `2026-10`).
+**`settings`** (key/value): `grace_days` (7), `reminder_template`, `paytm_number`, `academy_whatsapp_number`, `proration_rounding` (50), `advance_max_months` (12), `coach_attendance_edit_days` (7), `last_dues_month` (internal guard for rule 6.2, e.g. `2026-10`), `last_sheets_sync_date`, `last_sheets_sync_status` (internal, §3.3).
 
 ### 5.2 Relationships
 
@@ -341,6 +367,7 @@ gurukul-dashboard/
 │  │  ├─ attendance/service.ts
 │  │  ├─ payments/service.ts
 │  │  ├─ reminders/{template.ts, provider.ts, wa-link.ts}
+│  │  ├─ backup/{sheets-client.ts, sheets-sync.ts}   # Google Sheets mirror (§3.3)
 │  │  ├─ audit.ts · settings.ts · time.ts (IST helpers)
 │  │  └─ actions/                         # server actions grouped by module (below)
 │  ├─ components/{ui/, attendance/, fees/, students/, layout/}
@@ -372,6 +399,7 @@ gurukul-dashboard/
 | `/api/auth/*` | GET/POST | — | Better Auth (sign-in, callback, session, sign-out) |
 | `/api/cron/generate-dues` | POST | Bearer `CRON_SECRET` | Idempotent `ensureDues(current IST month)` |
 | `/api/export/[entity]` | GET | admin | CSV: students, dues, payments, attendance |
+| `/api/cron/sheets-backup` | POST | Bearer `CRON_SECRET` | Mirror DB → Google Sheet (§3.3) |
 | `/api/health` | GET | — | Uptime check (no data) |
 | `/api/webhooks/whatsapp` | POST | BSP signature | *Phase 2* |
 | `/api/webhooks/paytm` | POST | Paytm checksum | *Phase 2* |
@@ -423,6 +451,7 @@ Done when:
 6. Home metrics match a hand-calculated spreadsheet for a test month.
 7. A WhatsApp reminder opens with the correct pre-filled message in ≤ 2 taps. The bulk queue works through a filtered list.
 8. The site isn't indexed (noindex header verified), and all non-auth routes redirect to login when signed out.
+9. The Google Sheet mirror updates automatically each day and via **Sync now**, and its row counts match the database. A sync failure shows in Settings without affecting the app.
 
 ### Phase 2
 WhatsApp BSP API and automations (8.2) · Paytm payment links + webhook (9.2) · Web push notifications · Offline attendance queue · Parent-facing receipt link.
