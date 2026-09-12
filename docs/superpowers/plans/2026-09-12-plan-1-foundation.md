@@ -3197,11 +3197,13 @@ function duplicateName(): AppError {
 
 export async function listCenters(actor: Actor): Promise<CenterListItem[]> {
   requireAdmin(actor);
+  // Drizzle leaves columns unqualified in single-table selects, so the correlated subqueries
+  // spell out table names explicitly (otherwise `id` is ambiguous inside the subquery).
   const rows = await db
     .select({
       center: centers,
-      batchCount: sql<number>`(select count(*) from ${batches} where ${batches.centerId} = ${centers.id} and ${batches.isActive} = true)`,
-      studentCount: sql<number>`(select count(*) from ${students} inner join ${batches} on ${batches.id} = ${students.batchId} where ${batches.centerId} = ${centers.id} and ${students.status} = 'active')`,
+      batchCount: sql<number>`(select count(*) from \`batches\` b where b.\`center_id\` = \`centers\`.\`id\` and b.\`is_active\` = 1)`,
+      studentCount: sql<number>`(select count(*) from \`students\` s inner join \`batches\` b on b.\`id\` = s.\`batch_id\` where b.\`center_id\` = \`centers\`.\`id\` and s.\`status\` = 'active')`,
     })
     .from(centers)
     .orderBy(asc(centers.name));
