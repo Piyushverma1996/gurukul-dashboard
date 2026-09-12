@@ -18,6 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
+    "db:smoke": "tsx --env-file-if-exists=.env.local scripts/db-smoke.ts",
     "db:dev": "tsx scripts/dev-db.ts",
     "icons": "node scripts/make-icons.mjs"
   },

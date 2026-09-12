@@ -6028,7 +6028,8 @@ test("pages are private and not indexable", async ({ page, request }) => {
 
 test("a wrong password is rejected", async ({ page }) => {
   await login(page, "99999 00002", "not-the-password");
-  await expect(page.getByRole("alert")).toContainText("Wrong phone number or password");
+  // Next.js also renders an (empty) role="alert" route announcer, so match our message by text.
+  await expect(page.getByRole("alert").filter({ hasText: "Wrong phone number or password" })).toBeVisible();
 });
 
 test("an assistant must replace the temporary password on first login", async ({ page }) => {
@@ -6090,6 +6091,7 @@ test("admin adds a coach and gets shareable credentials", async ({ page }) => {
 
 Run: `npx playwright install chromium` then `npm run test:e2e`
 Expected: the first run starts MySQL and `next dev` (can take 1–2 minutes), then **6 passed**.
+If the Chromium download fails (blocked network), use the installed Google Chrome instead by adding `channel: "chrome"` to `use` in `playwright.config.ts`. That's what this project does.
 
 - [ ] **Step 5: Commit**
 
