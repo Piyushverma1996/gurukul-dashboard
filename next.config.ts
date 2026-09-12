@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // A stray lockfile in the user's home folder otherwise makes Next.js guess the wrong workspace root.
   turbopack: { root: process.cwd() },
+  // Lets the e2e server (scripts/e2e-server.ts) run beside `npm run dev` without sharing .next.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
