@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { currentMonthIST, daysInMonth, formatDateIN, formatMonthLabel, todayIST, weekdayIST } from "@/lib/time";
+import { currentMonthIST, daysInMonth, formatDateIN, formatDays, formatMonthLabel, formatTime12, todayIST, weekdayIST } from "@/lib/time";
+
+describe("schedule formatting", () => {
+  it("formats 24h DB times as 12h", () => {
+    expect(formatTime12("17:00:00")).toBe("5:00 pm");
+    expect(formatTime12("07:30:00")).toBe("7:30 am");
+    expect(formatTime12("12:05:00")).toBe("12:05 pm");
+    expect(formatTime12("00:15:00")).toBe("12:15 am");
+  });
+  it("formats weekday codes", () => {
+    expect(formatDays("MON,WED,FRI")).toBe("Mon, Wed, Fri");
+  });
+});
 
 describe("IST date helpers", () => {
   it("rolls over to the next IST day at 18:30 UTC", () => {

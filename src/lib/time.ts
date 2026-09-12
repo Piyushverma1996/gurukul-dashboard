@@ -27,6 +27,23 @@ export function formatMonthLabel(month: string): string {
   return new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, 1)));
 }
 
+/** "17:00:00" -> "5:00 pm" */
+export function formatTime12(dbTime: string): string {
+  const [h, m] = dbTime.split(":").map(Number);
+  const suffix = h >= 12 ? "pm" : "am";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+/** "MON,WED,FRI" -> "Mon, Wed, Fri" */
+export function formatDays(csv: string): string {
+  return csv
+    .split(",")
+    .filter(Boolean)
+    .map((d) => d.charAt(0) + d.slice(1).toLowerCase())
+    .join(", ");
+}
+
 /** "2026-10-03" -> "3 Oct 2026" */
 export function formatDateIN(isoDate: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);
