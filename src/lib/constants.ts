@@ -24,6 +24,25 @@ export const ROLE_LABELS: Record<StaffRole, string> = {
   assistant_coach: "Assistant coach",
 };
 
+export const paymentMethods = ["paytm", "cash", "register"] as const;
+export const paymentStatuses = ["pending_verification", "verified", "rejected"] as const;
+export const attendanceStatuses = ["present", "absent", "excused"] as const;
+export type PaymentMethod = (typeof paymentMethods)[number];
+export type PaymentStatus = (typeof paymentStatuses)[number];
+export type AttendanceStatus = (typeof attendanceStatuses)[number];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  paytm: "Paytm",
+  cash: "Cash",
+  register: "From register",
+};
+
+export const ATTENDANCE_LABELS: Record<AttendanceStatus, string> = {
+  present: "Present",
+  absent: "Absent",
+  excused: "Excused",
+};
+
 export const STATUS_LABELS: Record<StudentStatus, string> = {
   active: "Active",
   paused: "Paused",

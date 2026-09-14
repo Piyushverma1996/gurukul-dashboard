@@ -15,8 +15,8 @@ export type StudentFilters = { centerId?: string; batchId?: string; status?: Stu
 export type StudentListItem = {
   id: string;
   name: string;
-  parentName: string;
-  parentPhone: string;
+  parentName: string | null;
+  parentPhone: string | null;
   ageCategory: (typeof students.$inferSelect)["ageCategory"];
   batchId: string;
   batchName: string;
@@ -37,8 +37,8 @@ const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
 export function toStudentRow(data: StudentData, consentDate: string) {
   return {
     name: data.name,
-    parentName: data.parentName,
-    parentPhone: data.parentPhone,
+    parentName: data.parentName ?? null,
+    parentPhone: data.parentPhone ?? null,
     dob: data.dob ?? null,
     ageCategory: data.ageCategory,
     batchId: data.batchId,

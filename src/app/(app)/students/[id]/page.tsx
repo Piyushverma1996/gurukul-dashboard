@@ -24,7 +24,7 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
   const isAdmin = user.role === "admin";
   const discount = s.discountType ? (s.discountType === "flat" ? `${formatINR(s.discountValue ?? 0)} off` : `${s.discountValue}% off`) : "None";
   const rows: [string, string][] = [
-    ["Parent", s.parentName],
+    ["Parent", s.parentName ?? "Not added yet"],
     ["Batch", `${s.batchName} · ${s.centerName}`],
     ["Head coach", s.headCoachName ?? "Not assigned"],
     ["Age group", AGE_LABELS[s.ageCategory]],
@@ -51,17 +51,23 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <StudentStatusBadge status={s.status} />
-        <a href={`tel:${s.parentPhone}`} className={buttonVariants({ variant: "outline", className: "h-11" })}>
-          <Phone className="h-4 w-4" aria-hidden /> {formatIndianPhone(s.parentPhone)}
-        </a>
-        <a
-          href={`https://wa.me/${waNumber(s.parentPhone)}`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex h-11 items-center gap-2 rounded-md bg-success px-4 text-sm font-medium text-white"
-        >
-          <MessageCircle className="h-4 w-4" aria-hidden /> WhatsApp parent
-        </a>
+        {s.parentPhone ? (
+          <>
+            <a href={`tel:${s.parentPhone}`} className={buttonVariants({ variant: "outline", className: "h-11" })}>
+              <Phone className="h-4 w-4" aria-hidden /> {formatIndianPhone(s.parentPhone)}
+            </a>
+            <a
+              href={`https://wa.me/${waNumber(s.parentPhone)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-11 items-center gap-2 rounded-md bg-success px-4 text-sm font-medium text-white"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden /> WhatsApp parent
+            </a>
+          </>
+        ) : (
+          <span className="rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">Parent WhatsApp number not added yet</span>
+        )}
       </div>
       <Card className="mb-4">
         <CardHeader>

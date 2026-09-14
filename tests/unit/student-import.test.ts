@@ -50,6 +50,13 @@ describe("parseStudentCsv", () => {
 
   it("rejects files missing required columns", () => {
     const { headerErrors } = parseStudentCsv("name,parent_name\nA,B", lookup);
-    expect(headerErrors[0]).toMatch(/Missing column\(s\): parent_phone, center, batch, joining_date/);
+    expect(headerErrors[0]).toMatch(/Missing column\(s\): center, batch, joining_date/);
+  });
+
+  it("accepts rows with blank parent details (filled in later)", () => {
+    const csv = `${HEADER}\nSiyan,,,,,Bal Bharati Public School,U-12 Evening,01/09/2026,,,,,,`;
+    const { rows } = parseStudentCsv(csv, lookup);
+    expect(rows[0].errors).toEqual([]);
+    expect(rows[0].data).toMatchObject({ name: "Siyan", parentName: undefined, parentPhone: undefined });
   });
 });

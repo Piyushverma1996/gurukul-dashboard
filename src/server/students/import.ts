@@ -26,7 +26,8 @@ export const IMPORT_HEADERS = [
   "consent_given",
   "notes",
 ] as const;
-const REQUIRED = ["name", "parent_name", "parent_phone", "center", "batch", "joining_date"] as const;
+// Parent details may be blank until Sharan fills them in (spec §16.2).
+const REQUIRED = ["name", "center", "batch", "joining_date"] as const;
 const MAX_ROWS = 1000;
 const MAX_BYTES = 1_000_000;
 
@@ -51,6 +52,8 @@ export type ImportRow = { line: number; name: string; data?: StudentData; errors
 export type ImportPreview = { total: number; valid: number; invalid: number; headerErrors: string[]; rows: { line: number; name: string; errors: string[] }[] };
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+/** Same child = same name + parent phone, or same name in the same batch when no phone is known yet. */
+const dupKey = (s: { name: string; parentPhone?: string | null; batchId: string }) => `${norm(s.name)}|${s.parentPhone ?? `batch:${s.batchId}`}`;
 const parseYes = (v?: string) => ["yes", "y", "true", "1"].includes((v ?? "").trim().toLowerCase());
 
 /** Accepts YYYY-MM-DD, D/M/YYYY and D-M-YYYY (Excel in India). Anything else is passed through for the schema to reject. */
@@ -104,7 +107,7 @@ export function parseStudentCsv(csvText: string, lookup: ImportLookup): { rows: 
         errors.push(`${FIELD_TO_COLUMN[field] ?? field}: ${issue.message}`);
       }
     } else if (errors.length === 0) {
-      const key = `${norm(result.data.name)}|${result.data.parentPhone}`;
+      const key = dupKey(result.data);
       if (seen.has(key)) errors.push("Duplicate of an earlier row");
       seen.add(key);
     }
@@ -121,12 +124,16 @@ async function analyse(csvText: string) {
     .innerJoin(centers, eq(centers.id, batches.centerId));
   const result = parseStudentCsv(csvText, { batches: lookupRows });
 
-  const phones = [...new Set(result.rows.flatMap((r) => (r.data ? [r.data.parentPhone] : [])))];
-  if (phones.length) {
-    const existing = await db.select({ name: students.name, parentPhone: students.parentPhone }).from(students).where(inArray(students.parentPhone, phones));
-    const taken = new Set(existing.map((e) => `${norm(e.name)}|${e.parentPhone}`));
+  const candidates = result.rows.flatMap((r) => (r.data ? [r.data] : []));
+  if (candidates.length) {
+    const names = [...new Set(candidates.map((d) => d.name))];
+    const existing = await db
+      .select({ name: students.name, parentPhone: students.parentPhone, batchId: students.batchId })
+      .from(students)
+      .where(inArray(students.name, names));
+    const taken = new Set(existing.map((e) => dupKey(e)));
     for (const r of result.rows) {
-      if (r.data && taken.has(`${norm(r.data.name)}|${r.data.parentPhone}`)) {
+      if (r.data && taken.has(dupKey(r.data))) {
         r.errors.push("Already in the system");
         r.data = undefined;
       }

@@ -18,8 +18,8 @@ type BatchOption = { id: string; name: string; centerName: string; ageCategory: 
 type StudentValues = {
   id: string;
   name: string;
-  parentName: string;
-  parentPhone: string;
+  parentName: string | null;
+  parentPhone: string | null;
   dob: string | null;
   ageCategory: AgeCategory;
   batchId: string;
@@ -74,11 +74,18 @@ export function StudentForm({ batches, student, defaultBatchId, today }: { batch
       <Field label="Student name" htmlFor="name" error={fieldErrors.name}>
         <Input id="name" name="name" defaultValue={student?.name} className="h-11" />
       </Field>
-      <Field label="Parent name" htmlFor="parentName" error={fieldErrors.parentName}>
-        <Input id="parentName" name="parentName" defaultValue={student?.parentName} className="h-11" />
+      <Field label="Parent name" htmlFor="parentName" hint="Optional: can be added later here or in the Google Sheet" error={fieldErrors.parentName}>
+        <Input id="parentName" name="parentName" defaultValue={student?.parentName ?? ""} className="h-11" />
       </Field>
-      <Field label="Parent WhatsApp number" htmlFor="parentPhone" error={fieldErrors.parentPhone}>
-        <Input id="parentPhone" name="parentPhone" type="tel" inputMode="tel" defaultValue={student ? formatIndianPhone(student.parentPhone) : ""} className="h-11" />
+      <Field label="Parent WhatsApp number" htmlFor="parentPhone" hint="Optional, but needed for fee reminders" error={fieldErrors.parentPhone}>
+        <Input
+          id="parentPhone"
+          name="parentPhone"
+          type="tel"
+          inputMode="tel"
+          defaultValue={student?.parentPhone ? formatIndianPhone(student.parentPhone) : ""}
+          className="h-11"
+        />
       </Field>
       <Field label="Batch" htmlFor="batchId" error={fieldErrors.batchId}>
         <NativeSelect

@@ -43,6 +43,13 @@ describe("students", () => {
     expect(row).toMatchObject({ parentPhone: "+919876543210", feeDueDay: 1, customFee: null, discountType: null, consentGiven: true, consentDate: todayIST(), dob: null });
   });
 
+  it("allows blank parent details until they are filled in", async () => {
+    const w = await world();
+    const { id } = await createStudent(w.admin, { ...kid(w.mine.id), parentName: "", parentPhone: "" });
+    const [row] = await db.select().from(students).where(eq(students.id, id));
+    expect(row).toMatchObject({ parentName: null, parentPhone: null });
+  });
+
   it("validates discounts, phones, batch status and permissions", async () => {
     const w = await world();
     await expect(createStudent(w.admin, { ...kid(w.mine.id), discountType: "percent", discountValue: "150" })).rejects.toThrow();

@@ -91,8 +91,9 @@ const optRupees = z.preprocess(
 export const studentInputSchema = z
   .object({
     name: reqText(120),
-    parentName: reqText(120),
-    parentPhone: phoneIN,
+    // Optional until Sharan fills them in (spec §16.2)
+    parentName: optText(120),
+    parentPhone: z.preprocess(emptyToUndefined, phoneIN.optional()),
     dob: optDate,
     ageCategory: z.enum(ageCategories, { error: "Pick an age group" }),
     batchId: ulidSchema,

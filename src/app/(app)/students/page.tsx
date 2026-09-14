@@ -89,9 +89,13 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                     <p className="truncate text-sm text-muted-foreground">
                       {s.batchName} · {s.centerName}
                     </p>
-                    <p className="text-sm">
-                      {s.parentName} · {formatIndianPhone(s.parentPhone)}
-                    </p>
+                    {s.parentPhone ? (
+                      <p className="text-sm">
+                        {s.parentName ?? "Parent"} · {formatIndianPhone(s.parentPhone)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-warning">Parent details missing</p>
+                    )}
                   </div>
                   <StudentStatusBadge status={s.status} />
                 </CardContent>
