@@ -466,3 +466,46 @@ WhatsApp BSP API and automations (8.2) · Paytm payment links + webhook (9.2) ·
 - **Student data:** the existing list (Excel or Google Sheet) will be converted to the provided CSV template for import.
 - **Fee plans:** Sharan supplies the fee amount for each center and age combination before go-live.
 - **Adjustable defaults:** grace 7 days, proration rounding ₹50, coach attendance edit window 7 days, advance cap 12 months. All can be changed in Settings.
+
+---
+
+## 16. Decisions added on 2026-09-12 (after Plan 1 merged)
+
+These override earlier sections where they conflict.
+
+1. **Batch naming.** Batches are named by group and time slot, e.g. "Junior 4-5pm", "Senior 5-6pm".
+2. **Parent details are optional.** `parent_name` and `parent_phone` may be blank until Sharan fills them in. Students missing a phone show a "Parent details missing" chip. WhatsApp reminders are unavailable for them ("Add the parent's WhatsApp number first"). The CSV import and forms accept blank parent fields.
+3. **Google Sheet is two-way for student details** (replaces the "one-way only" rule of §3.3 for students; the mirror tabs stay one-way).
+   - The sheet has one tab per centre, "Students – <Centre>", holding the student details Sharan edits there.
+   - Hidden column A holds the app's Student ID. Rows without an ID but with a name become **new students**; the batch is matched by name within that centre.
+   - **Sync runs:**
+     - every 10 minutes via Hostinger cron → `POST /api/cron/sheets-sync`
+     - after admin page visits, if the last run was more than 10 minutes ago
+     - on demand via **Sync now** in Settings
+   - **Each run:**
+     - pulls sheet edits into the app (validated with the same rules as the app forms)
+     - then pushes the app's data back to every tab, including the one-way mirror tabs (Summary, Dues, Payments, Attendance, Attendance Monthly, Batches, Coaches, Sync Log)
+   - **Conflict rule:** if the same field changed in both the app and the sheet since the last sync, the app value is kept and the row's "Sync note" column explains why.
+   - **Invalid values** (e.g. a bad phone number) are not applied; the Sync note shows the error.
+   - **Deleting a row in the sheet does not delete the student**; the next sync restores the row. Removing a student happens in the app (or by setting Status = left in the sheet).
+   - Editable in the sheet: name, parent name, parent WhatsApp, DOB, age group, batch (within the same centre), joining date, fee due day, custom fee, discount type and value, consent, status, notes.
+   - Read-only in the sheet: ID, current-month fee status and attendance %. Sharan's edits there are overwritten.
+4. **Student delete (Sharan only).**
+   - Admin can permanently delete a student who has **no payment records** (removes their attendance, dues and reminders; an audit snapshot is kept).
+   - Students with payments can only be marked **Left**, because money records are never deleted.
+   - Only the admin can add, edit or delete students; coaches stay read-only.
+5. **Register ticks mean the fee is paid.**
+   - Ticked students get a *prepaid mark* for that month (`prepaid_marks` table).
+   - When that month's due is created (as soon as a fee plan exists), the app records a verified payment for the full due, with method **"register"** (shown as "From register").
+   - These payments are reported separately from Paytm and cash.
+6. **Coaches and fees.** Coaches see fee status chips and read-only ledgers for their own students, and can record cash (pending Sharan's verification). The academy-wide Fees page is admin-only.
+7. **Placeholder data for OPG World School** (from the September 2026 registers):
+   - **Batches** (Mon/Wed/Fri): "Junior 4-5pm" (sheet A), "Senior 5-6pm" (sheet B), "Senior 6-7pm" (sheet C). The last two names and all age groups are placeholders Sharan can rename.
+   - **50 students:** Neeom Tripathi is the same child as Shreeom Tripathi. Parent details are blank and the joining date is set to 1 Sep 2026.
+   - **Attendance:** Junior 4-5pm for 2, 7, 9 and 11 Sep. The other sheets' dates weren't legible.
+   - **Fees:** September prepaid marks for every ticked student.
+   - The registers for the other 4 centres will be added after go-live.
+8. **Accounts for deployment.**
+   - **Code:** a private GitHub repo under Piyush's account (vermapiyush96@gmail.com).
+   - **Google:** Google Cloud (OAuth client and Sheets service account) and the backup Sheet sit under the Gurukul Google account (shrigurshalagurukul@gmail.com).
+   - **Secrets** are entered into Hostinger by the account owner.
