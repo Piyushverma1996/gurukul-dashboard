@@ -4,6 +4,7 @@ import { ulid } from "ulid";
 import { db } from "./db";
 import { batchCoaches, batches, centers, students, user } from "./db/schema";
 import { seedDatabase } from "./seed";
+import { seedOpgPlaceholder } from "./seed-opg";
 import { insertStaffRecord } from "./staff/records";
 
 export const DEV_LOGINS = {
@@ -52,4 +53,7 @@ export async function seedDevFixtures(): Promise<void> {
     { name: "Dhruv Malhotra", parentName: "Karan Malhotra", parentPhone: "+919810000007", ageCategory: "U10", batchId: u10, joiningDate: "2026-07-15", consentGiven: true },
     { name: "Advik Chauhan", parentName: "Seema Chauhan", parentPhone: "+919810000008", ageCategory: "U10", batchId: u10, joiningDate: "2026-08-01", consentGiven: true },
   ]);
+
+  // The real OPG World School placeholder roster (from the September registers).
+  await seedOpgPlaceholder();
 }

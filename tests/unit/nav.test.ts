@@ -1,17 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { isActivePath, navItemsFor } from "@/components/layout/nav-items";
+import { isActivePath, navItemsFor, sidebarItemsFor } from "@/components/layout/nav-items";
 
 describe("navigation", () => {
-  it("gives the admin at most 5 bottom-bar items including admin pages", () => {
-    const items = navItemsFor("admin");
-    expect(items.length).toBeLessThanOrEqual(5);
-    expect(items.map((i) => i.href)).toEqual(["/", "/students", "/admin/batches", "/admin/coaches", "/admin/centers"]);
+  it("gives the admin a 5-item bottom bar ending in More", () => {
+    expect(navItemsFor("admin").map((i) => i.href)).toEqual(["/", "/attendance", "/students", "/fees", "/more"]);
   });
 
-  it("never shows admin pages to coaches", () => {
+  it("gives coaches attendance, their students and cash — never admin pages", () => {
     for (const role of ["head_coach", "assistant_coach"] as const) {
-      expect(navItemsFor(role).some((i) => i.href.startsWith("/admin"))).toBe(false);
+      const hrefs = navItemsFor(role).map((i) => i.href);
+      expect(hrefs).toEqual(["/", "/attendance", "/students", "/cash"]);
+      expect(sidebarItemsFor(role).some((i) => i.href.startsWith("/admin") || i.href === "/fees" || i.href === "/verify")).toBe(false);
     }
+  });
+
+  it("expands More in the admin's desktop sidebar", () => {
+    const hrefs = sidebarItemsFor("admin").map((i) => i.href);
+    expect(hrefs).not.toContain("/more");
+    expect(hrefs).toEqual(expect.arrayContaining(["/verify", "/admin/batches", "/admin/coaches", "/admin/centers", "/admin/settings"]));
   });
 
   it("matches active paths", () => {

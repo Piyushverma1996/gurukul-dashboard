@@ -28,7 +28,7 @@ test("an assistant must replace the temporary password on first login", async ({
 test("a head coach sees only their own batch and cannot reach admin pages", async ({ page }) => {
   await login(page, "99999 00002", "coach-pass-1");
   await expect(page.getByRole("heading", { name: "Hi Ravi" })).toBeVisible();
-  await expect(page.getByText("U-12 Evening")).toBeVisible();
+  await expect(page.getByText("U-12 Evening").first()).toBeVisible();
   await page.getByRole("link", { name: "My students" }).first().click();
   await expect(page.getByText("Arjun Mehta")).toBeVisible();
   await expect(page.getByText("Dhruv Malhotra")).toHaveCount(0);

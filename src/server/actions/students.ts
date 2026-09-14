@@ -5,7 +5,11 @@ import { runAction } from "@/lib/result";
 import type { StudentInput } from "@/lib/validators";
 import { requireActor } from "../session";
 import { commitStudentImport, previewStudentImport } from "../students/import";
-import { createStudent, setStudentStatus, updateStudent } from "../students/service";
+import { createStudent, deleteStudent, setStudentStatus, updateStudent } from "../students/service";
+
+export async function deleteStudentAction(id: string) {
+  return runAction(async () => deleteStudent(await requireActor(), id));
+}
 
 export async function createStudentAction(input: StudentInput) {
   return runAction(async () => createStudent(await requireActor(), input));

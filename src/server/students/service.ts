@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, like, or, type SQL } from "drizzle-orm";
+import { and, asc, eq, inArray, like, ne, or, type SQL, sql } from "drizzle-orm";
 import { ulid } from "ulid";
 import { z } from "zod";
 import { studentStatuses, type StudentStatus } from "@/lib/constants";
@@ -7,7 +7,7 @@ import { currentMonthIST, todayIST } from "@/lib/time";
 import { studentInputSchema, type StudentData, type StudentInput } from "@/lib/validators";
 import { writeAudit } from "../audit";
 import { db, type DbOrTx } from "../db";
-import { batches, centers, students, user } from "../db/schema";
+import { attendance, batches, centers, dues, payments, prepaidMarks, remindersLog, sheetSyncState, students, user } from "../db/schema";
 import { ensureDuesForMonth } from "../fees/service";
 import { type Actor, accessibleBatchIds, requireAdmin, requireStudentAccess } from "../permissions";
 
@@ -147,5 +147,33 @@ export async function setStudentStatus(actor: Actor, id: string, status: Student
     await writeAudit(tx, { actorId: actor.id, action: "student.status", entity: "student", entityId: id, before, after: { status: next } });
   });
   if (next === "active") await ensureDuesForMonth(currentMonthIST(), { studentIds: [id] });
+  return { id };
+}
+
+/**
+ * Admin only (spec §16.4). Money records are never deleted, so students with any
+ * non-rejected payment must be marked Left instead.
+ */
+export async function deleteStudent(actor: Actor, id: string): Promise<{ id: string }> {
+  requireAdmin(actor);
+  const [before] = await db.select().from(students).where(eq(students.id, id)).limit(1);
+  if (!before) throw new AppError("NOT_FOUND", "Student not found.");
+  const [paid] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(payments)
+    .where(and(eq(payments.studentId, id), ne(payments.status, "rejected")));
+  if (Number(paid?.n ?? 0) > 0) {
+    throw new AppError("CONFLICT", "This student has payment records, so they can't be deleted. Mark them as Left instead.");
+  }
+  await db.transaction(async (tx) => {
+    await tx.delete(payments).where(eq(payments.studentId, id)); // only rejected entries can remain
+    await tx.delete(attendance).where(eq(attendance.studentId, id));
+    await tx.delete(remindersLog).where(eq(remindersLog.studentId, id));
+    await tx.delete(prepaidMarks).where(eq(prepaidMarks.studentId, id));
+    await tx.delete(sheetSyncState).where(eq(sheetSyncState.studentId, id));
+    await tx.delete(dues).where(eq(dues.studentId, id));
+    await tx.delete(students).where(eq(students.id, id));
+    await writeAudit(tx, { actorId: actor.id, action: "student.delete", entity: "student", entityId: id, before });
+  });
   return { id };
 }

@@ -136,6 +136,25 @@ export const paymentInputSchema = z.object({
 export type PaymentInput = z.input<typeof paymentInputSchema>;
 
 export const reasonSchema = z.string().trim().min(2, "Add a short reason").max(255);
+
+/* ---------------- admin settings ---------------- */
+
+export const adminSettingsSchema = z.object({
+  paytm_number: phoneIN,
+  academy_whatsapp_number: phoneIN,
+  grace_days: z.coerce.number({ error: "Enter a number" }).int().min(0, "0–31").max(31, "0–31"),
+  coach_attendance_edit_days: z.coerce.number({ error: "Enter a number" }).int().min(0, "0–31").max(31, "0–31"),
+  advance_max_months: z.coerce.number({ error: "Enter a number" }).int().min(1, "1–24").max(24, "1–24"),
+  proration_rounding: z.coerce.number().int().refine((v) => [1, 10, 50, 100].includes(v), "Use 1, 10, 50 or 100"),
+  reminder_template: z
+    .string()
+    .trim()
+    .min(20, "Write the full message")
+    .max(1000)
+    .refine((t) => t.includes("{student_name}"), "Keep {student_name} in the message so parents know which child it's about"),
+});
+export type AdminSettingsInput = z.input<typeof adminSettingsSchema>;
+export type AdminSettings = z.output<typeof adminSettingsSchema>;
 export const rupeesSchema = z.coerce.number({ error: "Enter an amount" }).int("Whole rupees only").min(0).max(100_000);
 
 export const studentFiltersSchema = z.object({

@@ -13,7 +13,13 @@ export const DEFAULT_SETTINGS = {
   coach_attendance_edit_days: "7",
 } as const;
 
-export type SettingKey = keyof typeof DEFAULT_SETTINGS | "last_dues_month" | "last_sheets_sync_date" | "last_sheets_sync_status";
+export type SettingKey =
+  | keyof typeof DEFAULT_SETTINGS
+  | "last_dues_month"
+  | "last_sheets_sync_date"
+  | "last_sheets_sync_status"
+  | "last_sheets_sync_at"
+  | "sheets_sync_lock";
 
 export async function getSetting(key: SettingKey, dbx: DbOrTx = db): Promise<string | null> {
   const rows = await dbx.select({ value: settings.value }).from(settings).where(eq(settings.key, key)).limit(1);

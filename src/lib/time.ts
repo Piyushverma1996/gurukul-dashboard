@@ -50,6 +50,11 @@ export function addDays(isoDate: string, n: number): string {
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
 
+/** Date -> "14 Sep 2026, 5:32 pm" in IST */
+export function formatDateTimeIN(d: Date): string {
+  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: APP_TZ }).format(d);
+}
+
 /** "2026-09-14" -> "Monday" */
 export function formatWeekday(isoDate: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);

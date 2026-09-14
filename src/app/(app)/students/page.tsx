@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
+import { FeeStatusChip } from "@/components/fees/status-chip";
 import { StudentStatusBadge } from "@/components/students/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { STATUS_LABELS, studentStatuses } from "@/lib/constants";
 import { formatIndianPhone } from "@/lib/phone";
+import { currentMonthIST } from "@/lib/time";
 import { studentFiltersSchema } from "@/lib/validators";
+import { getFeeStatusForStudents } from "@/server/fees/service";
 import { listBatches } from "@/server/batches/service";
 import { listCenters } from "@/server/centers/service";
 import { requirePageUser } from "@/server/session";
@@ -25,6 +28,10 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   const filters = parsed.success ? parsed.data : {};
   const isAdmin = user.role === "admin";
   const [rows, batches, centers] = await Promise.all([listStudents(user, filters), listBatches(user), isAdmin ? listCenters(user) : Promise.resolve([])]);
+  const feeStatus = await getFeeStatusForStudents(
+    rows.map((r) => r.id),
+    currentMonthIST(),
+  );
 
   return (
     <>
@@ -97,7 +104,10 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                       <p className="text-sm text-warning">Parent details missing</p>
                     )}
                   </div>
-                  <StudentStatusBadge status={s.status} />
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <FeeStatusChip status={feeStatus.get(s.id)?.status ?? "none"} />
+                    <StudentStatusBadge status={s.status} />
+                  </div>
                 </CardContent>
               </Card>
             </Link>

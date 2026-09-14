@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { SessionUser } from "@/server/session";
 import { NavBar } from "./nav-bar";
-import { navItemsFor } from "./nav-items";
+import { navItemsFor, sidebarItemsFor } from "./nav-items";
 import { SignOutButton } from "./sign-out-button";
 
-export function AppShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {
+export function AppShell({ user, badges = {}, children }: { user: SessionUser; badges?: Record<string, number>; children: React.ReactNode }) {
   return (
     <div className="min-h-dvh pb-20 md:pb-0 md:pl-60">
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-primary px-4 text-primary-foreground">
@@ -17,7 +17,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
           <SignOutButton />
         </div>
       </header>
-      <NavBar items={navItemsFor(user.role)} />
+      <NavBar items={navItemsFor(user.role)} sidebarItems={sidebarItemsFor(user.role)} badges={badges} />
       <main className="mx-auto w-full max-w-5xl px-4 py-5">{children}</main>
     </div>
   );

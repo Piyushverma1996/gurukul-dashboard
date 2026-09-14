@@ -10,8 +10,14 @@ import { AGE_LABELS } from "@/lib/constants";
 import { formatINR } from "@/lib/money";
 import { formatIndianPhone, waNumber } from "@/lib/phone";
 import { AppError } from "@/lib/result";
-import { formatDateIN, formatMonthLabel } from "@/lib/time";
+import { LedgerCard } from "@/components/fees/ledger-card";
+import { WhatsAppReminderLink } from "@/components/reminders/whatsapp-reminder-link";
+import { DeleteStudentButton } from "@/components/students/delete-student-button";
+import { isHeadCoachOf } from "@/server/permissions";
+import { getReminder } from "@/server/reminders/service";
+import { formatDateIN, formatMonthLabel, todayIST } from "@/lib/time";
 import { getStudentAttendance } from "@/server/attendance/service";
+import { getLedger } from "@/server/fees/service";
 import { requirePageUser } from "@/server/session";
 import { getStudent } from "@/server/students/service";
 
@@ -24,6 +30,15 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
   });
   const isAdmin = user.role === "admin";
   const attendanceSummary = (await getStudentAttendance(user, s.id)).slice(0, 3);
+  const ledger = await getLedger(user, s.id);
+  const today = todayIST();
+  let reminder: Awaited<ReturnType<typeof getReminder>> | null = null;
+  if (s.parentPhone && ledger.totalOutstanding > 0 && (await isHeadCoachOf(user, s.batchId))) {
+    reminder = await getReminder(user, s.id).catch((e) => {
+      if (e instanceof AppError) return null; // nothing due yet, etc.
+      throw e;
+    });
+  }
   const discount = s.discountType ? (s.discountType === "flat" ? `${formatINR(s.discountValue ?? 0)} off` : `${s.discountValue}% off`) : "None";
   const rows: [string, string][] = [
     ["Parent", s.parentName ?? "Not added yet"],
@@ -44,11 +59,14 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
         title={s.name}
         description={`${s.batchName} · ${s.centerName}`}
         actions={
-          isAdmin && (
-            <Link href={`/students/${s.id}/edit`} className={buttonVariants({ variant: "outline", className: "h-11" })}>
-              Edit
-            </Link>
-          )
+          <>
+            {reminder && <WhatsAppReminderLink href={reminder.url} studentId={s.id} message={reminder.message} month={reminder.months.at(-1)} />}
+            {isAdmin && (
+              <Link href={`/students/${s.id}/edit`} className={buttonVariants({ variant: "outline", className: "h-11" })}>
+                Edit
+              </Link>
+            )}
+          </>
         }
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -87,6 +105,7 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
           {s.notes && <p className="mt-4 whitespace-pre-wrap rounded-md bg-surface p-3 text-sm">{s.notes}</p>}
         </CardContent>
       </Card>
+      <LedgerCard studentId={s.id} studentName={s.name} ledger={ledger} isAdmin={isAdmin} canRecordCash={s.status === "active"} today={today} />
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Attendance</CardTitle>
@@ -116,6 +135,10 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
           </CardHeader>
           <CardContent>
             <StatusActions studentId={s.id} status={s.status} />
+            <div className="mt-4 border-t pt-3">
+              <DeleteStudentButton studentId={s.id} name={s.name} />
+              <p className="text-xs text-muted-foreground">Only for mistakes or duplicates. Students with payments can only be marked as left.</p>
+            </div>
           </CardContent>
         </Card>
       )}
