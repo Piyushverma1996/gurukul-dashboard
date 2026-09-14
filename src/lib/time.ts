@@ -44,6 +44,18 @@ export function formatDays(csv: string): string {
     .join(", ");
 }
 
+/** "2026-09-14" + 1 -> "2026-09-15" (calendar arithmetic, timezone-free) */
+export function addDays(isoDate: string, n: number): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+
+/** "2026-09-14" -> "Monday" */
+export function formatWeekday(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d)));
+}
+
 /** "2026-10-03" -> "3 Oct 2026" */
 export function formatDateIN(isoDate: string): string {
   const [y, m, d] = isoDate.split("-").map(Number);

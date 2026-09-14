@@ -10,7 +10,8 @@ import { AGE_LABELS } from "@/lib/constants";
 import { formatINR } from "@/lib/money";
 import { formatIndianPhone, waNumber } from "@/lib/phone";
 import { AppError } from "@/lib/result";
-import { formatDateIN } from "@/lib/time";
+import { formatDateIN, formatMonthLabel } from "@/lib/time";
+import { getStudentAttendance } from "@/server/attendance/service";
 import { requirePageUser } from "@/server/session";
 import { getStudent } from "@/server/students/service";
 
@@ -22,6 +23,7 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
     throw e;
   });
   const isAdmin = user.role === "admin";
+  const attendanceSummary = (await getStudentAttendance(user, s.id)).slice(0, 3);
   const discount = s.discountType ? (s.discountType === "flat" ? `${formatINR(s.discountValue ?? 0)} off` : `${s.discountValue}% off`) : "None";
   const rows: [string, string][] = [
     ["Parent", s.parentName ?? "Not added yet"],
@@ -83,6 +85,28 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
             ))}
           </dl>
           {s.notes && <p className="mt-4 whitespace-pre-wrap rounded-md bg-surface p-3 text-sm">{s.notes}</p>}
+        </CardContent>
+      </Card>
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Attendance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {attendanceSummary.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No attendance recorded yet.</p>
+          ) : (
+            <ul className="divide-y text-sm">
+              {attendanceSummary.map((m) => (
+                <li key={m.month} className="flex items-center justify-between py-2">
+                  <span className="font-medium">{formatMonthLabel(m.month)}</span>
+                  <span>
+                    <span className="text-success">P {m.present}</span> · <span className="text-danger">A {m.absent}</span> · <span className="text-warning">E {m.excused}</span>
+                    <strong className="ml-3">{m.pct == null ? "—" : `${m.pct}%`}</strong>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
       {isAdmin && (
