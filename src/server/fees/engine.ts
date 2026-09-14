@@ -1,6 +1,8 @@
 // Pure fee maths (no DB) — spec §6. Services load data, call these, and persist the results.
 import type { AgeCategory, DiscountType } from "@/lib/constants";
-import { daysInMonth, formatMonthLabel } from "@/lib/time";
+import { addDays, daysInMonth, formatMonthLabel } from "@/lib/time";
+
+export { addDays };
 
 /* ---------------- dates & months ---------------- */
 
@@ -14,11 +16,6 @@ export function monthRange(from: string, to: string): string[] {
   const out: string[] = [];
   for (let m = from; m <= to; m = addMonths(m, 1)) out.push(m);
   return out;
-}
-
-export function addDays(isoDate: string, n: number): string {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
 
 /** ["2026-08","2026-09"] -> "August–September 2026" (used in reminders). */

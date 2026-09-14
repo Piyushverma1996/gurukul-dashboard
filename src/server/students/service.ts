@@ -3,11 +3,12 @@ import { ulid } from "ulid";
 import { z } from "zod";
 import { studentStatuses, type StudentStatus } from "@/lib/constants";
 import { AppError } from "@/lib/result";
-import { todayIST } from "@/lib/time";
+import { currentMonthIST, todayIST } from "@/lib/time";
 import { studentInputSchema, type StudentData, type StudentInput } from "@/lib/validators";
 import { writeAudit } from "../audit";
 import { db, type DbOrTx } from "../db";
 import { batches, centers, students, user } from "../db/schema";
+import { ensureDuesForMonth } from "../fees/service";
 import { type Actor, accessibleBatchIds, requireAdmin, requireStudentAccess } from "../permissions";
 
 export type StudentFilters = { centerId?: string; batchId?: string; status?: StudentStatus | "all"; q?: string };
@@ -118,6 +119,7 @@ export async function createStudent(actor: Actor, input: StudentInput): Promise<
     await tx.insert(students).values({ id, ...toStudentRow(data, todayIST()) });
     await writeAudit(tx, { actorId: actor.id, action: "student.create", entity: "student", entityId: id, after: data });
   });
+  await ensureDuesForMonth(currentMonthIST(), { studentIds: [id] });
   return { id };
 }
 
@@ -144,5 +146,6 @@ export async function setStudentStatus(actor: Actor, id: string, status: Student
     await tx.update(students).set({ status: next, statusChangedAt: new Date() }).where(eq(students.id, id));
     await writeAudit(tx, { actorId: actor.id, action: "student.status", entity: "student", entityId: id, before, after: { status: next } });
   });
+  if (next === "active") await ensureDuesForMonth(currentMonthIST(), { studentIds: [id] });
   return { id };
 }

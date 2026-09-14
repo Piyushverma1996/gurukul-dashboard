@@ -2,11 +2,12 @@ import { eq, inArray } from "drizzle-orm";
 import Papa from "papaparse";
 import type { AgeCategory } from "@/lib/constants";
 import { AppError } from "@/lib/result";
-import { todayIST } from "@/lib/time";
+import { currentMonthIST, todayIST } from "@/lib/time";
 import { studentInputSchema, type StudentData } from "@/lib/validators";
 import { writeAudit } from "../audit";
 import { db } from "../db";
 import { batches, centers, students } from "../db/schema";
+import { ensureDuesForMonth } from "../fees/service";
 import { type Actor, requireAdmin } from "../permissions";
 import { toStudentRow } from "./service";
 
@@ -168,5 +169,6 @@ export async function commitStudentImport(actor: Actor, csvText: string): Promis
     for (let i = 0; i < values.length; i += 200) await tx.insert(students).values(values.slice(i, i + 200));
     await writeAudit(tx, { actorId: actor.id, action: "student.import", entity: "student", entityId: "bulk", after: { count: values.length } });
   });
+  await ensureDuesForMonth(currentMonthIST());
   return { imported: values.length };
 }

@@ -113,6 +113,31 @@ export const studentInputSchema = z
 export type StudentInput = z.input<typeof studentInputSchema>;
 export type StudentData = z.output<typeof studentInputSchema>;
 
+/* ---------------- fees & payments ---------------- */
+
+export const feePlanInputSchema = z.object({
+  centerId: z.preprocess(emptyToUndefined, ulidSchema.optional()),
+  ageCategory: z.preprocess(emptyToUndefined, z.enum(ageCategories).optional()),
+  monthlyAmount: z.coerce.number({ error: "Enter the monthly fee" }).int("Whole rupees only").min(1, "Enter the monthly fee").max(100_000),
+  effectiveFrom: isoDate,
+  isActive: z.boolean().default(true),
+});
+export type FeePlanInput = z.input<typeof feePlanInputSchema>;
+
+export const paymentInputSchema = z.object({
+  studentId: ulidSchema,
+  amount: z.coerce.number({ error: "Enter an amount" }).int("Whole rupees only").min(1, "Enter an amount").max(500_000),
+  method: z.enum(["paytm", "cash"]),
+  receivedAt: isoDate,
+  txnRef: optText(80),
+  notes: optText(500),
+  idempotencyKey: z.string().min(1).max(64),
+});
+export type PaymentInput = z.input<typeof paymentInputSchema>;
+
+export const reasonSchema = z.string().trim().min(2, "Add a short reason").max(255);
+export const rupeesSchema = z.coerce.number({ error: "Enter an amount" }).int("Whole rupees only").min(0).max(100_000);
+
 export const studentFiltersSchema = z.object({
   centerId: z.preprocess(emptyToUndefined, ulidSchema.optional()),
   batchId: z.preprocess(emptyToUndefined, ulidSchema.optional()),
