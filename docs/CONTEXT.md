@@ -38,7 +38,7 @@ A **private web app** for **Gurukul Football Academy** (Gurukul FC), which runs 
   - the OPG World School placeholder roster: 3 batches, 50 students, 62 attendance marks, and 27 register "fee paid" ticks
 - ✅ Google sign-in, Google Sheet sync and both scheduled jobs are working.
 - ⏳ **Waiting on Sharan:**
-  - the filled setup sheet (`registers/setup/Gurukul-Setup-Sheet.xlsx`): centres, batches, coaches, fee rules, past dues
+  - the setup sheet (`registers/setup/Gurukul-Setup-Sheet.xlsx`). Centres, batches and fees are pre-filled from his 15 Sep message (§5a). He adds coaches and past dues, and answers the questions flagged in orange.
   - the registers for the other 4 centres
   - students' parent details, entered in the Google Sheet
 - ⏳ **Phase 2A** (§11) is designed and approved in principle. It starts once Sharan is happy with Phase 1.
@@ -106,6 +106,46 @@ The full rules are in the design spec, §6 (fees), §7 (attendance), §8 (remind
 - **One-way copies:** Summary, Dues, Payments, Attendance, Attendance Monthly, Batches, Coaches, Sync Log and Read me.
 - **When it syncs:** every 10 minutes (cron), when an admin opens the app, and on Settings → Google Sheet → Sync now.
 
+## 5a. Academy details (from Sharan, 2026-09-15)
+
+**Source:** Sharan's standard WhatsApp enquiry reply and the brochure. The text is kept verbatim in `docs/academy/sharan-centre-details-2026-09-15.md`.
+
+> ⚠️ **None of this is in the app yet.** It's pre-filled in the setup workbook for Sharan to confirm. Once he does, enter it through Centres, Batches and Settings → Fee plans.
+
+**About the academy:**
+- Established 2019. Boys and girls aged 4–17. Morning and evening batches.
+- 400+ students trained. 9 trials across 2 states. Plays in the Delhi Senior, A Division and Youth leagues.
+- **The first demo session is free.**
+- Contact: +91 96255 73511, gurukulfc.com, Instagram and Facebook @gurukulfootball.
+
+| Centre (name in the app / in the brochure) | Map pin | Days | Batches (as stated in the details section) |
+|---|---|---|---|
+| NK Bagrodia Public School / "NK Bagrodia School", Sec 4 | [pin](https://maps.app.goo.gl/V3n6Ln8ArezRh7BbA) | Mon, Wed, Fri | Junior U12 5:30–6:30 pm · Senior U16 6:30–7:30 pm · **Elite** (advanced players) 7:30–8:30 pm |
+| Play Yard / "Play Yard Sports", Sec 7 | [pin](https://maps.app.goo.gl/cNJwA7YPkBqxBx5H8) | Mon, Wed, Fri | U8 5:30–6:30 pm · U15 6:30–7:30 pm |
+| R.D. Rajpal School, Sec 9 | [pin](https://maps.app.goo.gl/GJVvXDh2cX8c9ruB7) | Mornings Mon, Wed, Fri · Evenings Tue, Thu, Sat | **Morning** 6:30–7:30 am (age 5+) · Junior U12 5:30–6:30 pm · Senior U19 6:30–7:30 pm |
+| Bal Bharati Public School / "Bal Bharati School", Sec 12 | [pin](https://maps.app.goo.gl/uh8MJ1j3Yb2vjbMU7) | Tue, Thu, Sat | Junior U12 5:30–6:30 pm · Senior U18 6:30–7:30 pm |
+| OPG World School, Sec 19B | [pin](https://maps.app.goo.gl/HMeNprymcSUe9u5w8) | Mon to Fri | Junior U12 5–6 pm · Senior U18 6–7 pm |
+
+**Fees:**
+- **₹2000/month** at every centre except OPG.
+- **OPG:** ₹3000/month for 5 days a week, ₹2500/month for 3 days a week.
+- **Gurukul kit** (T-shirt and shorts): ₹1000 one-time.
+- **Cosco football:** ₹700, optional.
+
+**Where Gurukul's setup and the app don't match yet** (planned for Phase 2A, §11):
+- **Age groups:**
+  - Gurukul uses U8, U12, U13, U15, U16, U18, U19 and Elite.
+  - The app has U8/U10/U12/U14/U16/U19/SENIOR.
+  - The app's list needs to match Gurukul's.
+- **One-time charges** (kit, football): the app only raises monthly dues today.
+- **OPG's two fee levels by days per week:** until there's a proper option, give 3-day children a **custom fee of ₹2500** on their student record, with the OPG centre plan set at ₹3000.
+
+**To confirm with Sharan** (these are flagged in orange in the workbook):
+- **Age groups:** the message's header list doesn't match the details for any centre. For example, Sec 4's header says U8/U13/U19, but the details say U12/U16/Elite.
+- **OPG timings:** the September register shows 3 batches on Mon/Wed/Fri (4–5, 5–6, 6–7 pm), but the message shows 2 batches Mon–Fri (5–6, 6–7 pm). The app currently has the register version.
+- **Sec 9 morning batch:** which age group, and is the fee the same?
+- **Centre names:** should "Play Yard" and "Bal Bharati Public School" be renamed to the brochure names?
+
 ## 6. Architecture
 
 | Layer | Choice |
@@ -152,6 +192,7 @@ Gurukul Football/
 ├─ AGENTS.md / CLAUDE.md      instructions for AI coding agents (CLAUDE.md points here)
 ├─ docs/
 │  ├─ CONTEXT.md              ← this document
+│  ├─ academy/                Sharan's centre, batch and fee details, verbatim (source record)
 │  ├─ deploy/hostinger-runbook.md   production setup + operations, step by step
 │  └─ superpowers/
 │     ├─ specs/               design specs (the source of truth for behaviour)
@@ -189,6 +230,7 @@ Gurukul Football/
 │  ├─ integration/            services against a real throwaway MySQL (permissions, money, sync)
 │  └─ e2e/                    Playwright on a phone-sized screen
 └─ registers/                 🔒 NOT in git. Children's personal data and working files:
+   ├─ academy/                Gurukul Brochure.pdf (76 MB)
    ├─ opg/                    OPG register photos, transcription, draft import CSV
    └─ setup/                  Gurukul-Setup-Sheet.xlsx (sent to Sharan to fill in)
 ```
@@ -291,6 +333,10 @@ Decided with Piyush on 2026-09-15: **go live first, then build 2A → 2B → 2C*
    - attendance: % by centre and batch, children below 60%
    - coaches: on-time, late, off-site, absent
 5. **Auto-migrate on server start**, so deploys never need the PC migration step.
+6. **Match Gurukul's setup** (§5a):
+   - age groups U8/U12/U13/U15/U16/U18/U19/Elite
+   - one-time charges (kit ₹1000, football ₹700)
+   - OPG's fee by days per week (₹3000 for 5 days, ₹2500 for 3)
 
 **Phase 2B: Player development** (free)
 - A 12-level journey: 3 years, one level per quarter.
@@ -309,6 +355,7 @@ Decided with Piyush on 2026-09-15: **go live first, then build 2A → 2B → 2C*
 | Document | Use it for |
 |---|---|
 | `docs/CONTEXT.md` | This overview; read it first |
+| `docs/academy/sharan-centre-details-2026-09-15.md` | Sharan's centre, batch and fee message, verbatim, plus brochure highlights |
 | `docs/superpowers/specs/2026-09-12-gurukul-dashboard-design.md` | Detailed behaviour and rules (§1–15 original design, §16 later decisions) |
 | `docs/superpowers/plans/2026-09-12-plan-1-foundation.md` | How the foundation was built (auth, staff, centres, batches, students) |
 | `docs/superpowers/plans/2026-09-12-plan-2-complete.md` | How the rest of Phase 1 was built (attendance, fees, payments, reminders, sync) |
