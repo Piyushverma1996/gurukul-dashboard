@@ -1,4 +1,5 @@
-export const ageCategories = ["U8", "U10", "U12", "U14", "U16", "U19", "SENIOR"] as const;
+// Gurukul's own age groups (centre list of 2026-10-05). U10/U14 are kept so existing rows stay valid.
+export const ageCategories = ["U8", "U10", "U12", "U13", "U14", "U15", "U16", "U18", "U19", "SENIOR", "ELITE"] as const;
 export const staffRoles = ["admin", "head_coach", "assistant_coach"] as const;
 export const studentStatuses = ["active", "paused", "left"] as const;
 export const discountTypes = ["flat", "percent"] as const;
@@ -12,10 +13,14 @@ export const AGE_LABELS: Record<AgeCategory, string> = {
   U8: "Under 8",
   U10: "Under 10",
   U12: "Under 12",
+  U13: "Under 13",
   U14: "Under 14",
+  U15: "Under 15",
   U16: "Under 16",
+  U18: "Under 18",
   U19: "Under 19",
   SENIOR: "Senior",
+  ELITE: "Elite (advanced)",
 };
 
 export const ROLE_LABELS: Record<StaffRole, string> = {

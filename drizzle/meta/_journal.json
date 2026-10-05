@@ -15,6 +15,13 @@
       "when": 1789369026356,
       "tag": "0001_v2_fees_attendance_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1791300000000,
+      "tag": "0002_age_groups",
+      "breakpoints": true
     }
   ]
 }

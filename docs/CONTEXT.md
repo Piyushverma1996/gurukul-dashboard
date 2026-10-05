@@ -118,33 +118,32 @@ The full rules are in the design spec, §6 (fees), §7 (attendance), §8 (remind
 - **The first demo session is free.**
 - Contact: +91 96255 73511, gurukulfc.com, Instagram and Facebook @gurukulfootball.
 
-| Centre (name in the app / in the brochure) | Map pin | Days | Batches (as stated in the details section) |
-|---|---|---|---|
-| NK Bagrodia Public School / "NK Bagrodia School", Sec 4 | [pin](https://maps.app.goo.gl/V3n6Ln8ArezRh7BbA) | Mon, Wed, Fri | Junior U12 5:30–6:30 pm · Senior U16 6:30–7:30 pm · **Elite** (advanced players) 7:30–8:30 pm |
-| Play Yard / "Play Yard Sports", Sec 7 | [pin](https://maps.app.goo.gl/cNJwA7YPkBqxBx5H8) | Mon, Wed, Fri | U8 5:30–6:30 pm · U15 6:30–7:30 pm |
-| R.D. Rajpal School, Sec 9 | [pin](https://maps.app.goo.gl/GJVvXDh2cX8c9ruB7) | Mornings Mon, Wed, Fri · Evenings Tue, Thu, Sat | **Morning** 6:30–7:30 am (age 5+) · Junior U12 5:30–6:30 pm · Senior U19 6:30–7:30 pm |
-| Bal Bharati Public School / "Bal Bharati School", Sec 12 | [pin](https://maps.app.goo.gl/uh8MJ1j3Yb2vjbMU7) | Tue, Thu, Sat | Junior U12 5:30–6:30 pm · Senior U18 6:30–7:30 pm |
-| OPG World School, Sec 19B | [pin](https://maps.app.goo.gl/HMeNprymcSUe9u5w8) | Mon to Fri | Junior U12 5–6 pm · Senior U18 6–7 pm |
+| Centre | Days | Batches (timings of 2026-10-05) |
+|---|---|---|
+| NK Bagrodia Public School, Sec 4 | Mon, Wed, Fri | Junior U12 5–6 pm · Senior U16 6–7 pm · **Elite** (16+/19+) 7–8 pm |
+| Play Yard, Sec 7 | Mon, Wed, Fri | U8 5–6 pm · U15 6–7 pm |
+| R.D. Rajpal School, Sec 9 | Mornings Mon, Wed, Fri · Evenings Tue, Thu, Sat | Morning 6:30–7:30 am · Junior U12 5–6 pm · Senior U19 6–7 pm |
+| Bal Bharati Public School, Sec 12 | Tue, Thu, Sat | Junior U12 5–6 pm · Senior U18 6–7 pm |
+| OPG World School, Sec 19B | Mon to Fri | Junior U12 5–6 pm · Senior U18 6–7 pm |
+
+Map pins are in `docs/academy/sharan-centre-details-2026-09-15.md`. Batch names in the app follow the times: "Junior 5-6pm", "Senior 6-7pm", "Elite 7-8pm", "Morning 6:30-7:30am".
 
 **Fees:**
 - **₹2000/month** at every centre except OPG.
-- **OPG:** ₹3000/month for 5 days a week, ₹2500/month for 3 days a week.
-- **Gurukul kit** (T-shirt and shorts): ₹1000 one-time.
-- **Cosco football:** ₹700, optional.
+- **OPG runs two programmes:** ₹3000/month for 5 days a week, ₹2500/month for 3 days. The 3-day students carry a ₹2500 custom fee against OPG's ₹3000 centre plan.
+- **Gurukul kit** (T-shirt and shorts): ₹1000 one-time. **Cosco football:** ₹700, optional.
+
+**The roster (loaded 2026-10-05):** Sharan's master workbook held 71 students with parent names, phones, dates of birth and per-student fees — 40 at Bal Bharati and 31 at OPG. `python scripts/roster-from-xlsx.py <workbook>` converts it to `registers/roster/roster.csv`, and `npm run db:load:roster` loads centres, batches, fee plans and students (safe to re-run). The September OPG placeholder roster was replaced by the real students.
 
 **Where Gurukul's setup and the app don't match yet** (planned for Phase 2A, §11):
-- **Age groups:**
-  - Gurukul uses U8, U12, U13, U15, U16, U18, U19 and Elite.
-  - The app has U8/U10/U12/U14/U16/U19/SENIOR.
-  - The app's list needs to match Gurukul's.
-- **One-time charges** (kit, football): the app only raises monthly dues today.
-- **OPG's two fee levels by days per week:** until there's a proper option, give 3-day children a **custom fee of ₹2500** on their student record, with the OPG centre plan set at ₹3000.
+- **One-time charges** (kit ₹1000, football ₹700): the app only raises monthly dues today.
+- **OPG's two fee levels by days per week:** 3-day children carry a custom ₹2500 fee (done by the loader). A proper "days per week" option is still to come.
 
-**To confirm with Sharan** (these are flagged in orange in the workbook):
-- **Age groups:** the message's header list doesn't match the details for any centre. For example, Sec 4's header says U8/U13/U19, but the details say U12/U16/Elite.
-- **OPG timings:** the September register shows 3 batches on Mon/Wed/Fri (4–5, 5–6, 6–7 pm), but the message shows 2 batches Mon–Fri (5–6, 6–7 pm). The app currently has the register version.
-- **Sec 9 morning batch:** which age group, and is the fee the same?
-- **Centre names:** should "Play Yard" and "Bal Bharati Public School" be renamed to the brochure names?
+**Still to confirm with Sharan:**
+- **Sec 9 morning batch:** which age group (loaded as U19), and is the fee the same?
+- **Age groups per child:** every student inherits their batch's age group; dates of birth are stored, so real ages can be checked later.
+- **Joining dates:** all loaded students start on the 1st of the load month, because the workbook has no joining date.
+- **Centre names:** should "Play Yard" and "Bal Bharati Public School" be renamed to the brochure names ("Play Yard Sports", "Bal Bharati School")?
 
 ## 6. Architecture
 
@@ -333,10 +332,7 @@ Decided with Piyush on 2026-09-15: **go live first, then build 2A → 2B → 2C*
    - attendance: % by centre and batch, children below 60%
    - coaches: on-time, late, off-site, absent
 5. **Auto-migrate on server start**, so deploys never need the PC migration step.
-6. **Match Gurukul's setup** (§5a):
-   - age groups U8/U12/U13/U15/U16/U18/U19/Elite
-   - one-time charges (kit ₹1000, football ₹700)
-   - OPG's fee by days per week (₹3000 for 5 days, ₹2500 for 3)
+6. **Match Gurukul's setup** (§5a): one-time charges (kit ₹1000, football ₹700) and OPG's fee by days per week. Age groups are done.
 
 **Phase 2B: Player development** (free)
 - A 12-level journey: 3 years, one level per quarter.
