@@ -18,7 +18,7 @@ const csv = (lines: string[]) => {
 };
 
 async function centresExist() {
-  const bb = await makeCenter({ name: "Bal Bharati Public School", sector: "Sector 12" });
+  const bb = await makeCenter({ name: "Bal Bharati School", sector: "Sector 12" });
   const opg = await makeCenter({ name: "OPG World School", sector: "Sector 19B" });
   return { bb, opg };
 }
@@ -77,7 +77,7 @@ describe("roster load", () => {
   });
 
   it("warns instead of guessing when a centre or batch is unknown", async () => {
-    await makeCenter({ name: "Bal Bharati Public School" });
+    await makeCenter({ name: "Bal Bharati School" });
     const path = csv([
       "Lost Child,Parent,+919971933847,2015-01-01,Male,Bal Bharati Public School,Evening 8-9pm,2000",
       "Other Child,Parent,+919971933848,2015-01-01,Male,Some Other Centre,Junior 5-6pm,2000",

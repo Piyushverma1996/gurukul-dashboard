@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "registers" / "roster" / "roster.csv"
 
 CENTRES = {
-    "bal bharati": "Bal Bharati Public School",
+    "bal bharati": "Bal Bharati School",
     "opg": "OPG World School",
     "nk bagrodia": "NK Bagrodia Public School",
-    "play yard": "Play Yard",
+    "play yard": "Play Yard Arena",
     "rd rajpal": "R.D. Rajpal School",
     "r.d. rajpal": "R.D. Rajpal School",
 }

@@ -20,7 +20,7 @@ export const CENTRE_BATCHES: Record<string, BatchDef[]> = {
     { name: "Senior 6-7pm", ageCategory: "U16", days: "MON,WED,FRI", start: "18:00:00", end: "19:00:00" },
     { name: "Elite 7-8pm", ageCategory: "ELITE", days: "MON,WED,FRI", start: "19:00:00", end: "20:00:00" },
   ],
-  "Play Yard": [
+  "Play Yard Arena": [
     { name: "Junior 5-6pm", ageCategory: "U8", days: "MON,WED,FRI", start: "17:00:00", end: "18:00:00" },
     { name: "Senior 6-7pm", ageCategory: "U15", days: "MON,WED,FRI", start: "18:00:00", end: "19:00:00" },
   ],
@@ -29,7 +29,7 @@ export const CENTRE_BATCHES: Record<string, BatchDef[]> = {
     { name: "Junior 5-6pm", ageCategory: "U12", days: "TUE,THU,SAT", start: "17:00:00", end: "18:00:00" },
     { name: "Senior 6-7pm", ageCategory: "U19", days: "TUE,THU,SAT", start: "18:00:00", end: "19:00:00" },
   ],
-  "Bal Bharati Public School": [
+  "Bal Bharati School": [
     { name: "Junior 5-6pm", ageCategory: "U12", days: "TUE,THU,SAT", start: "17:00:00", end: "18:00:00" },
     { name: "Senior 6-7pm", ageCategory: "U18", days: "TUE,THU,SAT", start: "18:00:00", end: "19:00:00" },
   ],
@@ -42,11 +42,15 @@ export const CENTRE_BATCHES: Record<string, BatchDef[]> = {
 /** Standard monthly fee per centre. OPG's 3-day students get a ₹2500 custom fee from the roster. */
 export const CENTRE_FEES: Record<string, number> = {
   "NK Bagrodia Public School": 2000,
-  "Play Yard": 2000,
+  "Play Yard Arena": 2000,
   "R.D. Rajpal School": 2000,
-  "Bal Bharati Public School": 2000,
+  "Bal Bharati School": 2000,
   "OPG World School": 3000,
 };
+
+/** Centre names used before the 2026-10-06 rename, so older roster files still load. */
+const CENTRE_ALIASES: Record<string, string> = { "Play Yard": "Play Yard Arena", "Bal Bharati Public School": "Bal Bharati School" };
+const canonical = (name: string) => CENTRE_ALIASES[name.trim()] ?? name.trim();
 
 /** September placeholder batches, replaced by the real OPG timetable. */
 const RETIRED_BATCHES: Record<string, string[]> = {
@@ -144,7 +148,8 @@ export async function loadRoster(csvPath: string, opts: { joiningDate?: string }
 
     // 4. Students.
     for (const row of rows) {
-      const batch = batchBy.get(`${row.centre}|${row.batch}`);
+      const centre = canonical(row.centre);
+      const batch = batchBy.get(`${centre}|${row.batch}`);
       if (!batch) {
         r.warnings.push(`${row.name}: no batch "${row.batch}" at ${row.centre}, so the student was skipped.`);
         continue;
@@ -160,7 +165,7 @@ export async function loadRoster(csvPath: string, opts: { joiningDate?: string }
         continue;
       }
       const fee = Number(row.monthly_fee || 0);
-      const centreFee = CENTRE_FEES[row.centre];
+      const centreFee = CENTRE_FEES[centre];
       await tx.insert(students).values({
         id: ulid(),
         name: row.name.trim(),

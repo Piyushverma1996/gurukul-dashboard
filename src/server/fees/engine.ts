@@ -72,6 +72,9 @@ export type ComputedDue = { baseAmount: number; discountAmount: number; amountDu
 
 const roundTo = (x: number, step: number) => (step > 0 ? Math.round(x / step) * step : Math.round(x));
 
+/** Sharan's rule (2026-10-06): join on the 16th or later and the first month costs half. Before that, full fee. */
+export const HALF_MONTH_FROM_DAY = 16;
+
 export function computeDue(i: DueInput): ComputedDue {
   const baseAmount = i.customFee ?? i.planAmount;
   const rawDiscount =
@@ -84,10 +87,11 @@ export function computeDue(i: DueInput): ComputedDue {
   let isProrated = false;
   const joinDay = Number(i.joiningDate.slice(8, 10));
   if (i.joiningDate.slice(0, 7) === i.month && joinDay > 1) {
-    const remaining = dim - joinDay + 1;
-    amountDue = roundTo((amountDue * remaining) / dim, i.rounding);
     dueDate = i.joiningDate;
-    isProrated = true;
+    if (joinDay >= HALF_MONTH_FROM_DAY) {
+      amountDue = roundTo(amountDue / 2, i.rounding);
+      isProrated = true;
+    }
   }
   return { baseAmount, discountAmount, amountDue, dueDate, isProrated };
 }

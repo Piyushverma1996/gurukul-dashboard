@@ -139,10 +139,13 @@ Map pins are in `docs/academy/sharan-centre-details-2026-09-15.md`. Batch names 
 - **One-time charges** (kit ₹1000, football ₹700): the app only raises monthly dues today.
 - **OPG's two fee levels by days per week:** 3-day children carry a custom ₹2500 fee (done by the loader). A proper "days per week" option is still to come.
 
+**Decided on 2026-10-06 (Sharan's answers):** centres renamed to **Play Yard Arena** and **Bal Bharati School**; Sector 9 morning batch is U19 at ₹2000; Elite batch ₹2000; OPG's 3-day students may attend any days; fee reminders use UPI **sharansingh1997@okhdfcbank** from +91 96255 73511, in English; no sibling or other discounts; the ₹1000 kit is compulsory and the ₹700 football optional (both still to be built as one-time charges); **joining on the 16th or later costs half that month, earlier joiners pay the full fee**; 11 coaches loaded with batch assignments (`npm run db:setup:academy`).
+
 **Still to confirm with Sharan:**
 - **Sec 9 morning batch:** which age group (loaded as U19), and is the fee the same?
 - **Age groups per child:** every student inherits their batch's age group; dates of birth are stored, so real ages can be checked later.
 - **Joining dates:** all loaded students start on the 1st of the load month, because the workbook has no joining date.
+- **Students at NK Bagrodia, Play Yard Arena and R.D. Rajpal:** still no roster for these three centres.
 - **Centre names:** should "Play Yard" and "Bal Bharati Public School" be renamed to the brochure names ("Play Yard Sports", "Bal Bharati School")?
 
 ## 6. Architecture

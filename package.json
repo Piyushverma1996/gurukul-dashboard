@@ -21,6 +21,7 @@
     "db:smoke": "tsx --env-file-if-exists=.env.local scripts/db-smoke.ts",
     "db:seed:opg": "tsx --env-file-if-exists=.env.local scripts/seed-opg.ts",
     "db:load:roster": "tsx --env-file-if-exists=.env.local scripts/load-roster.ts",
+    "db:setup:academy": "tsx --env-file-if-exists=.env.local scripts/apply-setup.ts",
     "db:dev": "tsx scripts/dev-db.ts",
     "icons": "node scripts/make-icons.mjs"
   },

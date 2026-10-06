@@ -50,9 +50,10 @@ describe("computeDue", () => {
     expect(computeDue({ ...base, month: "2026-10", feeDueDay: 5 }).dueDate).toBe("2026-10-05");
   });
 
-  it("prorates the joining month by days remaining, rounded to ₹50, due on the joining date", () => {
+  it("charges half the month from the 16th, full fee before that, due on the joining date", () => {
     expect(computeDue({ ...base, joiningDate: "2026-09-16", discountType: "flat", discountValue: 200 })).toMatchObject({ amountDue: 900, dueDate: "2026-09-16", isProrated: true });
-    expect(computeDue({ ...base, joiningDate: "2026-09-10", discountType: "flat", discountValue: 200 }).amountDue).toBe(1250);
+    expect(computeDue({ ...base, joiningDate: "2026-09-30" }).amountDue).toBe(1000);
+    expect(computeDue({ ...base, joiningDate: "2026-09-10", discountType: "flat", discountValue: 200 })).toMatchObject({ amountDue: 1800, dueDate: "2026-09-10", isProrated: false });
     expect(computeDue({ ...base, joiningDate: "2026-09-01" }).isProrated).toBe(false);
   });
 });
