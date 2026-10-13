@@ -17,7 +17,7 @@ export function SettingsForm({ initial }: { initial: AdminSettings }) {
   const router = useRouter();
   const { run, pending, fieldErrors } = useAction(updateAdminSettingsAction);
   const [v, setV] = useState({
-    paytm_number: formatIndianPhone(initial.paytm_number),
+    paytm_number: initial.paytm_number.startsWith("+91") ? formatIndianPhone(initial.paytm_number) : initial.paytm_number,
     academy_whatsapp_number: formatIndianPhone(initial.academy_whatsapp_number),
     grace_days: String(initial.grace_days),
     coach_attendance_edit_days: String(initial.coach_attendance_edit_days),
@@ -47,8 +47,8 @@ export function SettingsForm({ initial }: { initial: AdminSettings }) {
       }}
     >
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Sharan's Paytm number" htmlFor="paytm_number" hint="Shown in fee reminders" error={fieldErrors.paytm_number}>
-          <Input id="paytm_number" type="tel" value={v.paytm_number} onChange={set("paytm_number")} className="h-11" />
+        <Field label="UPI ID or Paytm number" htmlFor="paytm_number" hint="Shown in fee reminders, e.g. name@okaxis" error={fieldErrors.paytm_number}>
+          <Input id="paytm_number" value={v.paytm_number} onChange={set("paytm_number")} className="h-11" />
         </Field>
         <Field label="Academy WhatsApp number" htmlFor="academy_whatsapp_number" error={fieldErrors.academy_whatsapp_number}>
           <Input id="academy_whatsapp_number" type="tel" value={v.academy_whatsapp_number} onChange={set("academy_whatsapp_number")} className="h-11" />

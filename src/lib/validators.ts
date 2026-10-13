@@ -141,8 +141,18 @@ export const reasonSchema = z.string().trim().min(2, "Add a short reason").max(2
 
 /* ---------------- admin settings ---------------- */
 
+/** Parents pay by UPI ID (e.g. name@okaxis) or to a mobile number — both are allowed. */
+export const upiIdOrPhone = z.string().transform((value, ctx) => {
+  const v = value.trim();
+  if (/^[\w.\-]{2,64}@[A-Za-z]{2,32}$/.test(v)) return v;
+  const e164 = toE164India(v);
+  if (e164) return e164;
+  ctx.addIssue({ code: "custom", message: "Enter a UPI ID (name@bank) or a 10-digit mobile number" });
+  return z.NEVER;
+});
+
 export const adminSettingsSchema = z.object({
-  paytm_number: phoneIN,
+  paytm_number: upiIdOrPhone,
   academy_whatsapp_number: phoneIN,
   grace_days: z.coerce.number({ error: "Enter a number" }).int().min(0, "0–31").max(31, "0–31"),
   coach_attendance_edit_days: z.coerce.number({ error: "Enter a number" }).int().min(0, "0–31").max(31, "0–31"),
