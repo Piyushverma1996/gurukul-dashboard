@@ -37,9 +37,10 @@ A **private web app** for **Gurukul Football Academy** (Gurukul FC), which runs 
   - 5 centres
   - the OPG World School placeholder roster: 3 batches, 50 students, 62 attendance marks, and 27 register "fee paid" ticks
 - ✅ Google sign-in, Google Sheet sync and both scheduled jobs are working.
+- ✅ **Live data since 2026-10-13:** 3 centres (Play Yard Arena, Bal Bharati School, OPG World School — NK Bagrodia and R.D. Rajpal stay on paper), 6 batches, 71 students with parent details, fee plans (₹2000 / ₹3000 OPG), 14 staff accounts with batch assignments. Fees start fresh on **1 November 2026**: every student has a 1 Nov joining date, so no October dues exist. Coach temporary passwords are in `registers/logins/`.
 - ⏳ **Waiting on Sharan:**
   - the setup sheet (`registers/setup/Gurukul-Setup-Sheet.xlsx`). Centres, batches and fees are pre-filled from his 15 Sep message (§5a). He adds coaches and past dues, and answers the questions flagged in orange.
-  - the registers for the other 4 centres
+  - the Play Yard Arena student list (its two batches are empty)
   - students' parent details, entered in the Google Sheet
 - ⏳ **Phase 2A** (§11) is designed and approved in principle. It starts once Sharan is happy with Phase 1.
 

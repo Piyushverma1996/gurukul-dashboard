@@ -22,7 +22,11 @@
     "db:seed:opg": "tsx --env-file-if-exists=.env.local scripts/seed-opg.ts",
     "db:load:roster": "tsx --env-file-if-exists=.env.local scripts/load-roster.ts",
     "db:setup:academy": "tsx --env-file-if-exists=.env.local scripts/apply-setup.ts",
-    "db:apply": "npm run db:migrate && npm run db:load:roster && npm run db:setup:academy",
+    "db:apply": "npm run db:migrate && npm run db:setup:academy && npm run db:load:roster && npm run db:setup:academy",
+    "prod:migrate": "node --env-file=.env.production.local scripts/migrate.mjs",
+    "prod:load:roster": "tsx --env-file=.env.production.local scripts/load-roster.ts",
+    "prod:setup:academy": "tsx --env-file=.env.production.local scripts/apply-setup.ts",
+    "prod:smoke": "tsx --env-file=.env.production.local scripts/db-smoke.ts",
     "db:dev": "tsx scripts/dev-db.ts",
     "icons": "node scripts/make-icons.mjs"
   },
