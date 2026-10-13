@@ -7,11 +7,11 @@ const mem = await createDB({ version: "8.4.x", dbName: "gurukul_e2e", logLevel: 
 const url = `mysql://${mem.username}@127.0.0.1:${mem.port}/${mem.dbName}`;
 process.env.DATABASE_URL = url;
 
-const { runMigrations } = await import("../src/server/db/migrate");
+const { runMigrations } = await import("../../src/server/db/migrate");
 await runMigrations(url);
-const { seedDevFixtures } = await import("../src/server/dev-fixtures");
+const { seedDevFixtures } = await import("../../src/server/dev-fixtures");
 await seedDevFixtures();
-const { pool } = await import("../src/server/db");
+const { pool } = await import("../../src/server/db");
 await pool.end();
 
 const child = spawn("npx", ["next", "dev", "--port", String(PORT)], {

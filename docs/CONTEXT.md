@@ -134,7 +134,7 @@ Map pins are in `docs/academy/sharan-centre-details-2026-09-15.md`. Batch names 
 - **OPG runs two programmes:** ₹3000/month for 5 days a week, ₹2500/month for 3 days. The 3-day students carry a ₹2500 custom fee against OPG's ₹3000 centre plan.
 - **Gurukul kit** (T-shirt and shorts): ₹1000 one-time. **Cosco football:** ₹700, optional.
 
-**The roster (loaded 2026-10-05):** Sharan's master workbook held 71 students with parent names, phones, dates of birth and per-student fees — 40 at Bal Bharati and 31 at OPG. `python scripts/roster-from-xlsx.py <workbook>` converts it to `registers/roster/roster.csv`, and `npm run db:load:roster` loads centres, batches, fee plans and students (safe to re-run). The September OPG placeholder roster was replaced by the real students.
+**The roster (loaded 2026-10-05):** Sharan's master workbook held 71 students with parent names, phones, dates of birth and per-student fees — 40 at Bal Bharati and 31 at OPG. `python scripts/tools/roster-from-xlsx.py <workbook>` converts it to `registers/roster/roster.csv`, and `npm run db:load:roster` loads centres, batches, fee plans and students (safe to re-run). The September OPG placeholder roster was replaced by the real students.
 
 **Where Gurukul's setup and the app don't match yet** (planned for Phase 2A, §11):
 - **One-time charges** (kit ₹1000, football ₹700): the app only raises monthly dues today.
@@ -211,14 +211,25 @@ Gurukul Football/
 ├─ drizzle/                   SQL migrations (additive only) + drizzle-kit metadata
 ├─ public/                    logo, PWA icons, student-import-template.csv
 ├─ scripts/
-│  ├─ migrate.mjs             applies drizzle/ migrations (npm run db:migrate)
-│  ├─ seed.ts                 creates the first admin + centres (npm run db:seed)
-│  ├─ seed-opg.ts             loads the OPG placeholder roster (npm run db:seed:opg)
-│  ├─ db-smoke.ts             checks a live DB is compatible (npm run db:smoke)
-│  ├─ dev-db.ts               throwaway local MySQL on :3307 with demo data (npm run db:dev)
-│  ├─ e2e-server.ts           server for Playwright (:3100, .next-e2e)
-│  ├─ make-icons.mjs          regenerates PWA icons from the logo
-│  └─ make-setup-sheet.py     regenerates Sharan's setup workbook (needs Python + openpyxl)
+│  ├─ db/                     anything that touches a database
+│  │  ├─ migrate.mjs          applies drizzle/ migrations (npm run db:migrate · prod:migrate)
+│  │  ├─ seed.ts              creates the first admin + centres (npm run db:seed)
+│  │  ├─ seed-opg.ts          the September OPG placeholder roster (npm run db:seed:opg)
+│  │  ├─ load-roster.ts       loads centres' batches, fee plans and students (npm run db:load:roster)
+│  │  ├─ apply-setup.ts       centre names, reminder settings, coaches (npm run db:setup:academy)
+│  │  ├─ db-smoke.ts          checks a live database is compatible (npm run db:smoke)
+│  │  └─ dev-db.ts            throwaway local MySQL on :3307 with demo data (npm run db:dev)
+│  ├─ sheets/                 Google Sheet diagnostics; each takes the service-account key file
+│  │  ├─ check.ts             can the service account reach a sheet? what tabs does it have?
+│  │  ├─ peek.ts              prints given cell ranges
+│  │  ├─ rename-tabs.ts       renames tabs · delete-tabs.ts removes them
+│  │  └─ consolidate.ts       one-off: folded Sharan's answer sheet into the app's sheet
+│  └─ tools/
+│     ├─ e2e-server.ts        server for Playwright (:3100, .next-e2e)
+│     ├─ make-icons.mjs       regenerates PWA icons from the logo
+│     ├─ roster-from-xlsx.py  academy workbook → registers/roster/roster.csv
+│     ├─ make-setup-sheet.py  regenerates Sharan's setup workbook (needs Python + openpyxl)
+│     └─ make-info-needed-sheet.py   the "information still needed" workbook
 ├─ src/
 │  ├─ proxy.ts                sends signed-out users to /login
 │  ├─ app/
@@ -241,7 +252,11 @@ Gurukul Football/
 │  ├─ integration/            services against a real throwaway MySQL (permissions, money, sync)
 │  └─ e2e/                    Playwright on a phone-sized screen
 └─ registers/                 🔒 NOT in git. Children's personal data and working files:
-   ├─ academy/                Gurukul Brochure.pdf (76 MB)
+   ├─ academy/                brochure (PDF and JPEG)
+   ├─ logins/                 coaches' temporary passwords, until they sign in
+   ├─ proposals/              the Gurugram partnership deck, with its build script
+   ├─ roster/                 roster.csv, the import the app was loaded from
+   ├─ sheet-backups/          dated copies of the Google Sheet and Sharan's workbooks
    ├─ opg/                    OPG register photos, transcription, draft import CSV
    └─ setup/                  Gurukul-Setup-Sheet.xlsx (sent to Sharan to fill in)
 ```

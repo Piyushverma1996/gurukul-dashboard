@@ -1,6 +1,6 @@
 """Turns Gurukul's master database workbook into the roster CSV the loader reads.
 
-Usage: python scripts/roster-from-xlsx.py "C:\\path\\Gurukul Data base.xlsx"
+Usage: python scripts/tools/roster-from-xlsx.py "C:\\path\\Gurukul Data base.xlsx"
 Writes registers/roster/roster.csv (git-ignored: it holds children's personal data).
 
 The workbook's columns are: Name | WhatsApp phone | Date of birth | Gender | Center | Batch |
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import openpyxl
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "registers" / "roster" / "roster.csv"
 
 CENTRES = {

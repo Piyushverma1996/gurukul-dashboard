@@ -16,7 +16,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npx tsx scripts/e2e-server.ts",
+    command: "npx tsx scripts/tools/e2e-server.ts",
     url: "http://localhost:3100/login",
     timeout: 300_000,
     reuseExistingServer: false,

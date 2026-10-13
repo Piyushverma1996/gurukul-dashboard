@@ -1,4 +1,4 @@
-"""Regenerates Sharan's setup workbook (registers/setup/, git-ignored). Run: python scripts/make-setup-sheet.py (needs openpyxl).
+"""Regenerates Sharan's setup workbook (registers/setup/, git-ignored). Run: python scripts/tools/make-setup-sheet.py (needs openpyxl).
 
 Pre-filled from Sharan's WhatsApp centre message of 2026-09-15 (docs/academy/sharan-centre-details-2026-09-15.md).
 """
@@ -9,7 +9,7 @@ from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 
 NAVY, GOLD, CREAM, AMBER = "0D1F4B", "C9A227", "FFF8E1", "B45309"
-OUT = Path(__file__).resolve().parents[1] / "registers" / "setup" / "Gurukul-Setup-Sheet.xlsx"
+OUT = Path(__file__).resolve().parents[2] / "registers" / "setup" / "Gurukul-Setup-Sheet.xlsx"
 
 NK, PY, RD, BB, OPG = "NK Bagrodia Public School", "Play Yard", "R.D. Rajpal School", "Bal Bharati Public School", "OPG World School"
 CENTRES = [

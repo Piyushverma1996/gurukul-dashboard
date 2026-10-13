@@ -1,6 +1,6 @@
 """Builds the "information still needed" workbook for Sharan (upload it to Google Sheets).
 
-Run: python scripts/make-info-needed-sheet.py
+Run: python scripts/tools/make-info-needed-sheet.py
 Writes registers/setup/Gurukul-Information-Needed.xlsx (git-ignored: it lists real students).
 Reads registers/roster/roster.csv for the students already loaded into the app.
 """
@@ -11,7 +11,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 ROSTER = ROOT / "registers" / "roster" / "roster.csv"
 OUT = ROOT / "registers" / "setup" / "Gurukul-Information-Needed.xlsx"
 

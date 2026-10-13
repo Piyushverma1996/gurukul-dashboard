@@ -12,7 +12,7 @@ next-env.d.ts
 .env.local
 .env.*.local
 
-# Register photos / transcriptions contain children's personal data — never commit
+# Children's personal data, academy files and secrets — never commit
 /registers/
 /*.jpeg
 /*.jpg
