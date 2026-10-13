@@ -8,6 +8,7 @@ export const STUDENT_COLUMNS = [
   { key: "batch", header: "Batch" },
   { key: "parentName", header: "Parent name" },
   { key: "parentPhone", header: "Parent WhatsApp" },
+  { key: "reminderPhone", header: "Send fee reminders to (if not the parent)" },
   { key: "dob", header: "Date of birth (DD/MM/YYYY)" },
   { key: "ageCategory", header: "Age group (U8-U19 or SENIOR)" },
   { key: "joiningDate", header: "Joining date (DD/MM/YYYY)" },
@@ -29,6 +30,7 @@ export const EDITABLE_KEYS = [
   "batch",
   "parentName",
   "parentPhone",
+  "reminderPhone",
   "dob",
   "ageCategory",
   "joiningDate",
@@ -48,6 +50,7 @@ export const FIELD_LABELS: Record<EditableKey, string> = {
   batch: "Batch",
   parentName: "Parent name",
   parentPhone: "Parent WhatsApp",
+  reminderPhone: "Reminder number",
   dob: "Date of birth",
   ageCategory: "Age group",
   joiningDate: "Joining date",
@@ -80,6 +83,7 @@ export type StudentForSheet = {
   batchName: string;
   parentName: string | null;
   parentPhone: string | null;
+  reminderPhone: string | null;
   dob: string | null;
   ageCategory: AgeCategory;
   joiningDate: string;
@@ -98,6 +102,7 @@ export function studentToFields(s: StudentForSheet): SheetFields {
     batch: s.batchName,
     parentName: s.parentName ?? "",
     parentPhone: s.parentPhone ? formatIndianPhone(s.parentPhone) : "",
+    reminderPhone: s.reminderPhone ? formatIndianPhone(s.reminderPhone) : "",
     dob: isoToDmy(s.dob),
     ageCategory: s.ageCategory,
     joiningDate: isoToDmy(s.joiningDate),
@@ -133,6 +138,7 @@ export function normalizeField(key: EditableKey, raw: string): string {
   const v = (raw ?? "").trim().replace(/\s+/g, " ");
   switch (key) {
     case "parentPhone":
+    case "reminderPhone":
       return v ? (toE164India(v) ?? v) : "";
     case "dob":
     case "joiningDate": {

@@ -130,6 +130,8 @@ export const students = mysqlTable(
     // Optional until Sharan fills them in (app or Google Sheet) — spec §16.2
     parentName: varchar("parent_name", { length: 120 }),
     parentPhone: varchar("parent_phone", { length: 20 }),
+    /** Where fee reminders go: a sibling's or second parent's number. Falls back to parentPhone. */
+    reminderPhone: varchar("reminder_phone", { length: 20 }),
     dob: date("dob", { mode: "string" }),
     ageCategory: mysqlEnum("age_category", ageCategories).notNull(),
     batchId: char("batch_id", { length: 26 }).notNull().references(() => batches.id),

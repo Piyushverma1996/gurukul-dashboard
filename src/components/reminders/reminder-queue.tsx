@@ -20,6 +20,7 @@ type Item = {
   lastRemindedAt: string | null;
   url: string;
   message: string;
+  needsNumber: boolean;
 };
 
 /** Browsers can't send WhatsApp messages in bulk, so this walks Sharan through them: Open → Send in WhatsApp → Next. */
@@ -65,6 +66,14 @@ export function ReminderQueue({ items, month }: { items: Item[]; month: string }
           </div>
           {item.lastRemindedAt && <p className="text-xs text-muted-foreground">Last reminded {formatDateIN(item.lastRemindedAt.slice(0, 10))}</p>}
           <p className="whitespace-pre-wrap rounded-md bg-surface p-3 text-sm">{item.message}</p>
+          {item.needsNumber && (
+            <p className="text-xs text-muted-foreground">
+              Going to the parent&apos;s number.{" "}
+              <Link href={`/students/${item.studentId}`} className="font-semibold underline">
+                Send to someone else
+              </Link>
+            </p>
+          )}
           <div className="flex gap-2">
             <WhatsAppReminderLink
               href={item.url}

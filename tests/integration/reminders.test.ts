@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { batchCoaches, remindersLog } from "@/server/db/schema";
 import { createFeePlan, getMonthOverview } from "@/server/fees/service";
 import { recordPayment } from "@/server/payments/service";
-import { getReminder, listReminderQueue, logReminder } from "@/server/reminders/service";
+import { getReminder, getReminderTarget, listReminderQueue, logReminder, setReminderPhone } from "@/server/reminders/service";
 import { makeBatch, makeCenter, makeStaff, makeStudent } from "./fixtures";
 import { resetDb } from "./helpers";
 
@@ -42,6 +42,27 @@ describe("WhatsApp reminders", () => {
       await expect(getReminder(coach, w.withPhone.id, { today: TODAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(logReminder(coach, w.withPhone.id, "hi")).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
+  });
+
+  it("asks once where reminders go, then uses that number", async () => {
+    const w = await world();
+    expect(await getReminderTarget(w.admin, w.withPhone.id)).toMatchObject({ needsNumber: true });
+
+    await setReminderPhone(w.admin, w.withPhone.id, "98111 22233");
+
+    expect(await getReminderTarget(w.admin, w.withPhone.id)).toEqual({ needsNumber: false, suggestedPhone: "+919811122233" });
+    const r = await getReminder(w.admin, w.withPhone.id, { today: TODAY });
+    expect(r.phone).toBe("+919811122233");
+    expect(r.url).toContain("919811122233");
+    await expect(setReminderPhone(w.admin, w.withPhone.id, "12345")).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(setReminderPhone(w.coach, w.withPhone.id, "98111 22233")).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("can remind a student whose only number is the reminder number", async () => {
+    const w = await world();
+    await setReminderPhone(w.admin, w.noPhone.id, "98111 22244");
+    const r = await getReminder(w.admin, w.noPhone.id, { today: TODAY });
+    expect(r.phone).toBe("+919811122244");
   });
 
   it("needs a parent phone and something outstanding", async () => {

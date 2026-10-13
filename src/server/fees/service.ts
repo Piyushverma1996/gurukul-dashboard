@@ -307,6 +307,7 @@ export type OverviewRow = {
   studentId: string;
   studentName: string;
   parentPhone: string | null;
+  reminderPhone: string | null;
   batchId: string;
   batchName: string;
   centerId: string;
@@ -343,6 +344,7 @@ export async function getMonthOverview(
       due: dues,
       studentName: students.name,
       parentPhone: students.parentPhone,
+      reminderPhone: students.reminderPhone,
       batchId: batches.id,
       batchName: batches.name,
       centerId: centers.id,
@@ -393,6 +395,7 @@ export async function getMonthOverview(
       studentId: r.due.studentId,
       studentName: r.studentName,
       parentPhone: r.parentPhone,
+      reminderPhone: r.reminderPhone,
       batchId: r.batchId,
       batchName: r.batchName,
       centerId: r.centerId,

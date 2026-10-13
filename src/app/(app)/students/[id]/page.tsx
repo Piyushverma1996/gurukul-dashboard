@@ -11,10 +11,10 @@ import { formatINR } from "@/lib/money";
 import { formatIndianPhone, waNumber } from "@/lib/phone";
 import { AppError } from "@/lib/result";
 import { LedgerCard } from "@/components/fees/ledger-card";
-import { WhatsAppReminderLink } from "@/components/reminders/whatsapp-reminder-link";
+import { ReminderNumberGate } from "@/components/reminders/reminder-number-gate";
 import { DeleteStudentButton } from "@/components/students/delete-student-button";
 import { isHeadCoachOf } from "@/server/permissions";
-import { getReminder } from "@/server/reminders/service";
+import { getReminder, getReminderTarget } from "@/server/reminders/service";
 import { formatDateIN, formatMonthLabel, todayIST } from "@/lib/time";
 import { getStudentAttendance } from "@/server/attendance/service";
 import { getLedger } from "@/server/fees/service";
@@ -32,8 +32,9 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
   const attendanceSummary = (await getStudentAttendance(user, s.id)).slice(0, 3);
   const ledger = isAdmin ? await getLedger(user, s.id) : null;
   const today = todayIST();
+  const reminderTarget = isAdmin && (s.parentPhone || s.reminderPhone) ? await getReminderTarget(user, s.id) : null;
   let reminder: Awaited<ReturnType<typeof getReminder>> | null = null;
-  if (isAdmin && s.parentPhone && ledger && ledger.totalOutstanding > 0) {
+  if (isAdmin && (s.reminderPhone || s.parentPhone) && ledger && ledger.totalOutstanding > 0) {
     reminder = await getReminder(user, s.id).catch((e) => {
       if (e instanceof AppError) return null; // nothing due yet, etc.
       throw e;
@@ -43,6 +44,7 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
   const rows: [string, string][] = isAdmin
     ? [
         ["Parent", s.parentName ?? "Not added yet"],
+        ["Fee reminders go to", s.reminderPhone ? formatIndianPhone(s.reminderPhone) : s.parentPhone ? `${formatIndianPhone(s.parentPhone)} (parent)` : "No number yet"],
         ["Batch", `${s.batchName} · ${s.centerName}`],
         ["Head coach", s.headCoachName ?? "Not assigned"],
         ["Age group", AGE_LABELS[s.ageCategory]],
@@ -67,7 +69,14 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
         description={`${s.batchName} · ${s.centerName}`}
         actions={
           <>
-            {reminder && <WhatsAppReminderLink href={reminder.url} studentId={s.id} message={reminder.message} month={reminder.months.at(-1)} />}
+            {reminderTarget && (
+              <ReminderNumberGate
+                studentId={s.id}
+                reminder={reminder ? { href: reminder.url, message: reminder.message, month: reminder.months.at(-1) } : null}
+                needsNumber={reminderTarget.needsNumber}
+                suggestedPhone={reminderTarget.suggestedPhone}
+              />
+            )}
             {isAdmin && (
               <Link href={`/students/${s.id}/edit`} className={buttonVariants({ variant: "outline", className: "h-11" })}>
                 Edit

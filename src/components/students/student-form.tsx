@@ -20,6 +20,7 @@ type StudentValues = {
   name: string;
   parentName: string | null;
   parentPhone: string | null;
+  reminderPhone: string | null;
   dob: string | null;
   ageCategory: AgeCategory;
   batchId: string;
@@ -50,6 +51,7 @@ export function StudentForm({ batches, student, defaultBatchId, today }: { batch
             name: str(fd, "name"),
             parentName: str(fd, "parentName"),
             parentPhone: str(fd, "parentPhone"),
+            reminderPhone: str(fd, "reminderPhone"),
             dob: str(fd, "dob"),
             ageCategory: str(fd, "ageCategory") as AgeCategory,
             batchId: str(fd, "batchId"),
@@ -84,6 +86,21 @@ export function StudentForm({ batches, student, defaultBatchId, today }: { batch
           type="tel"
           inputMode="tel"
           defaultValue={student?.parentPhone ? formatIndianPhone(student.parentPhone) : ""}
+          className="h-11"
+        />
+      </Field>
+      <Field
+        label="Send fee reminders to"
+        htmlFor="reminderPhone"
+        hint="Leave blank to use the parent's number. Use this for a sibling or second parent."
+        error={fieldErrors.reminderPhone}
+      >
+        <Input
+          id="reminderPhone"
+          name="reminderPhone"
+          type="tel"
+          inputMode="tel"
+          defaultValue={student?.reminderPhone ? formatIndianPhone(student.reminderPhone) : ""}
           className="h-11"
         />
       </Field>

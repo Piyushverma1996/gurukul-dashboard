@@ -5,7 +5,7 @@ const student = {
   name: "Siyan",
   batchName: "Junior 4-5pm",
   parentName: null,
-  parentPhone: null,
+  parentPhone: null, reminderPhone: null,
   dob: null,
   ageCategory: "U10" as const,
   joiningDate: "2026-09-01",
@@ -20,12 +20,13 @@ const student = {
 
 describe("sheet layout", () => {
   it("formats students the way Sharan reads them", () => {
-    const f = studentToFields({ ...student, parentPhone: "+919876543210", dob: "2016-03-31", customFee: 1800, consentGiven: true });
+    const f = studentToFields({ ...student, parentPhone: "+919876543210", reminderPhone: "+919811122233", dob: "2016-03-31", customFee: 1800, consentGiven: true });
     expect(f).toMatchObject({
       name: "Siyan",
       batch: "Junior 4-5pm",
       parentName: "",
       parentPhone: "98765 43210",
+      reminderPhone: "98111 22233",
       dob: "31/03/2016",
       ageCategory: "U10",
       joiningDate: "01/09/2026",
@@ -59,9 +60,9 @@ describe("sheet layout", () => {
 
   it("applies sheet edits, ignores untouched cells and flags two-sided conflicts", () => {
     const base: SheetFields = studentToFields(student);
-    const sheet = { ...base, parentName: "Rohit", parentPhone: "9876543210", notes: "Sheet note" };
+    const sheet = { ...base, parentName: "Rohit", parentPhone: "9876543210", reminderPhone: "9811122233", notes: "Sheet note" };
     const dbNow = { ...base, notes: "App note" };
-    expect(diffFields(sheet, base, dbNow)).toEqual({ apply: { parentName: "Rohit", parentPhone: "9876543210" }, conflicts: ["notes"] });
+    expect(diffFields(sheet, base, dbNow)).toEqual({ apply: { parentName: "Rohit", parentPhone: "9876543210", reminderPhone: "9811122233" }, conflicts: ["notes"] });
     // Changed to the same value on both sides: nothing to do.
     expect(diffFields({ ...base, notes: "Same" }, base, { ...base, notes: "Same" })).toEqual({ apply: {}, conflicts: [] });
     // Without a baseline the app wins (nothing applied).

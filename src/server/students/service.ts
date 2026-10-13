@@ -40,6 +40,7 @@ export function toStudentRow(data: StudentData, consentDate: string) {
     name: data.name,
     parentName: data.parentName ?? null,
     parentPhone: data.parentPhone ?? null,
+    reminderPhone: data.reminderPhone ?? null,
     dob: data.dob ?? null,
     ageCategory: data.ageCategory,
     batchId: data.batchId,
@@ -115,7 +116,7 @@ export async function getStudent(actor: Actor, id: string): Promise<StudentDetai
     .limit(1);
   const detail = { ...row.student, batchName: row.batchName, centerId: row.centerId, centerName: row.centerName, headCoachName: row.headCoachName };
   if (actor.role === "admin") return detail;
-  return { ...hideContactFromCoach(actor, detail), dob: null, notes: null, customFee: null, discountType: null, discountValue: null };
+  return { ...hideContactFromCoach(actor, detail), reminderPhone: null, dob: null, notes: null, customFee: null, discountType: null, discountValue: null };
 }
 
 export async function createStudent(actor: Actor, input: StudentInput): Promise<{ id: string }> {

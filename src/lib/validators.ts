@@ -94,6 +94,8 @@ export const studentInputSchema = z
     // Optional until Sharan fills them in (spec §16.2)
     parentName: optText(120),
     parentPhone: z.preprocess(emptyToUndefined, phoneIN.optional()),
+    /** Blank = reminders go to the parent's number. */
+    reminderPhone: z.preprocess(emptyToUndefined, phoneIN.optional()),
     dob: optDate,
     ageCategory: z.enum(ageCategories, { error: "Pick an age group" }),
     batchId: ulidSchema,
