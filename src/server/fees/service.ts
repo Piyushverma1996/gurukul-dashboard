@@ -257,6 +257,7 @@ export function toLedgerDue(d: typeof dues.$inferSelect, s: Sums, today: string,
 }
 
 export async function getLedger(actor: Actor, studentId: string, ctx: Ctx = {}): Promise<Ledger> {
+  requireAdmin(actor); // Fees are admin-only (2026-10-13).
   await requireStudentAccess(actor, studentId);
   const today = ctx.today ?? todayIST();
   const grace = await graceDays();

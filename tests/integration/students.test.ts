@@ -74,6 +74,19 @@ describe("students", () => {
     expect((await listStudents(w.admin, { q: "100%_" })).length).toBe(0);
   });
 
+  it("hides the family's contact details from coaches", async () => {
+    const w = await world();
+    const { id } = await createStudent(w.admin, { ...kid(w.mine.id), dob: "2015-04-02", notes: "Allergic to peanuts" });
+
+    const [listed] = await listStudents(w.coach);
+    expect(listed).toMatchObject({ name: "Arjun Mehta", parentName: null, parentPhone: null });
+    const forCoach = await getStudent(w.coach, id);
+    expect(forCoach).toMatchObject({ parentName: null, parentPhone: null, dob: null, notes: null, customFee: null });
+
+    const forAdmin = await getStudent(w.admin, id);
+    expect(forAdmin).toMatchObject({ parentName: "Rohit Mehta", parentPhone: "+919876543210", dob: "2015-04-02", notes: "Allergic to peanuts" });
+  });
+
   it("stops coaches opening other batches' students", async () => {
     const w = await world();
     const { id } = await createStudent(w.admin, { ...kid(w.other.id), ageCategory: "U10" });

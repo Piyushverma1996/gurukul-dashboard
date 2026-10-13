@@ -7,10 +7,10 @@ import { currentMonthIST, formatDateIN, todayIST } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { getFeeStatusForStudents } from "@/server/fees/service";
 import { listMyCashEntries } from "@/server/payments/service";
-import { requirePageUser } from "@/server/session";
+import { requireAdminPage } from "@/server/session";
 import { listStudents } from "@/server/students/service";
 
-export const metadata: Metadata = { title: "Cash" };
+export const metadata: Metadata = { title: "Record payment" };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   pending_verification: { label: "Waiting for Sharan", cls: "bg-warning/15 text-warning" },
@@ -19,7 +19,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export default async function CashPage() {
-  const user = await requirePageUser();
+  const user = await requireAdminPage();
   const today = todayIST();
   const students = await listStudents(user, {});
   const status = await getFeeStatusForStudents(
@@ -32,22 +32,22 @@ export default async function CashPage() {
 
   return (
     <>
-      <PageHeader title="Cash collected" description="Record cash from parents. Sharan verifies it once he receives it." />
+      <PageHeader title="Record payment" description="Record cash or Paytm received from a parent." />
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>Record cash</CardTitle>
+          <CardTitle>New payment</CardTitle>
         </CardHeader>
         <CardContent>
           {options.length === 0 ? (
-            <p className="text-sm text-muted-foreground">You don't have any students yet.</p>
+            <p className="text-sm text-muted-foreground">No students yet.</p>
           ) : (
-            <RecordPaymentForm students={options} methods={user.role === "admin" ? ["cash", "paytm"] : ["cash"]} today={today} />
+            <RecordPaymentForm students={options} methods={["cash", "paytm"]} today={today} />
           )}
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>My recent entries</CardTitle>
+          <CardTitle>Recently recorded</CardTitle>
         </CardHeader>
         <CardContent>
           {entries.length === 0 ? (

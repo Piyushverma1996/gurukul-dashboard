@@ -6,11 +6,11 @@ describe("navigation", () => {
     expect(navItemsFor("admin").map((i) => i.href)).toEqual(["/", "/attendance", "/students", "/fees", "/more"]);
   });
 
-  it("gives coaches attendance, their students and cash — never admin pages", () => {
+  it("gives coaches attendance and their students — never money or admin pages", () => {
     for (const role of ["head_coach", "assistant_coach"] as const) {
       const hrefs = navItemsFor(role).map((i) => i.href);
-      expect(hrefs).toEqual(["/", "/attendance", "/students", "/cash"]);
-      expect(sidebarItemsFor(role).some((i) => i.href.startsWith("/admin") || i.href === "/fees" || i.href === "/verify")).toBe(false);
+      expect(hrefs).toEqual(["/", "/attendance", "/students", "/more"]);
+      expect(sidebarItemsFor(role).some((i) => i.href.startsWith("/admin") || ["/fees", "/verify", "/cash"].includes(i.href))).toBe(false);
     }
   });
 

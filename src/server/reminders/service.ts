@@ -44,6 +44,7 @@ async function requireReminderRights(actor: Actor, studentId: string) {
 }
 
 export async function getReminder(actor: Actor, studentId: string, ctx: Ctx = {}): Promise<Reminder> {
+  requireAdmin(actor); // Fee reminders are sent by Sharan and Piyush only (2026-10-13).
   const info = await requireReminderRights(actor, studentId);
   if (!info.parentPhone) throw new AppError("VALIDATION", "Add the parent's WhatsApp number first.");
   const today = ctx.today ?? todayIST();
@@ -67,6 +68,7 @@ export async function getReminder(actor: Actor, studentId: string, ctx: Ctx = {}
 }
 
 export async function logReminder(actor: Actor, studentId: string, message: string, month?: string): Promise<{ id: string }> {
+  requireAdmin(actor);
   await requireReminderRights(actor, studentId);
   const [row] = await db
     .insert(remindersLog)

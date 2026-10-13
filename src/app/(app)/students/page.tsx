@@ -28,10 +28,13 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   const filters = parsed.success ? parsed.data : {};
   const isAdmin = user.role === "admin";
   const [rows, batches, centers] = await Promise.all([listStudents(user, filters), listBatches(user), isAdmin ? listCenters(user) : Promise.resolve([])]);
-  const feeStatus = await getFeeStatusForStudents(
-    rows.map((r) => r.id),
-    currentMonthIST(),
-  );
+  // Coaches never see fees (2026-10-13).
+  const feeStatus = isAdmin
+    ? await getFeeStatusForStudents(
+        rows.map((r) => r.id),
+        currentMonthIST(),
+      )
+    : null;
 
   return (
     <>
@@ -96,16 +99,17 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
                     <p className="truncate text-sm text-muted-foreground">
                       {s.batchName} · {s.centerName}
                     </p>
-                    {s.parentPhone ? (
-                      <p className="text-sm">
-                        {s.parentName ?? "Parent"} · {formatIndianPhone(s.parentPhone)}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-warning">Parent details missing</p>
-                    )}
+                    {isAdmin &&
+                      (s.parentPhone ? (
+                        <p className="text-sm">
+                          {s.parentName ?? "Parent"} · {formatIndianPhone(s.parentPhone)}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-warning">Parent details missing</p>
+                      ))}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <FeeStatusChip status={feeStatus.get(s.id)?.status ?? "none"} />
+                    {feeStatus && <FeeStatusChip status={feeStatus.get(s.id)?.status ?? "none"} />}
                     <StudentStatusBadge status={s.status} />
                   </div>
                 </CardContent>

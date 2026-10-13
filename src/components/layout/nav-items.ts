@@ -14,11 +14,12 @@ export function navItemsFor(role: StaffRole): NavItem[] {
       { href: "/more", label: "More", icon: "more" },
     ];
   }
+  // Coaches see no money at all (2026-10-13).
   return [
     { href: "/", label: "Home", icon: "home" },
     { href: "/attendance", label: "Attendance", icon: "attendance" },
     { href: "/students", label: "My students", icon: "students" },
-    { href: "/cash", label: "Cash", icon: "cash" },
+    { href: "/more", label: "More", icon: "more" },
   ];
 }
 
@@ -27,6 +28,7 @@ export function sidebarItemsFor(role: StaffRole): NavItem[] {
   if (role !== "admin") return navItemsFor(role);
   return [
     ...navItemsFor(role).filter((i) => i.href !== "/more"),
+    { href: "/cash", label: "Record payment", icon: "cash" },
     { href: "/verify", label: "Verify cash", icon: "verify" },
     { href: "/admin/batches", label: "Batches", icon: "batches" },
     { href: "/admin/coaches", label: "Coaches", icon: "coaches" },

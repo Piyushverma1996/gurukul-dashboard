@@ -58,22 +58,18 @@ describe("dues", () => {
 describe("payments", () => {
   beforeEach(resetDb);
 
-  it("keeps coach cash pending until verified and spreads money oldest-first into future months", async () => {
+  it("records admin payments as verified and spreads money oldest-first into future months", async () => {
     const w = await world();
-    const cash = await recordPayment(w.coach, { studentId: w.a.id, amount: "3000", method: "cash", receivedAt: "2026-09-10", idempotencyKey: "k1" }, { today: "2026-09-10" });
-    expect(cash.status).toBe("pending_verification");
+    const cash = await recordPayment(w.admin, { studentId: w.a.id, amount: "3000", method: "cash", receivedAt: "2026-09-10", idempotencyKey: "k1" }, { today: "2026-09-10" });
+    expect(cash.status).toBe("verified");
+    // Coaches can't see money at all.
+    await expect(getLedger(w.coach, w.a.id, { today: "2026-09-10" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(recordPayment(w.coach, { studentId: w.a.id, amount: "500", method: "cash", receivedAt: "2026-09-10", idempotencyKey: "k9" })).rejects.toMatchObject({ code: "FORBIDDEN" });
 
-    let ledger = await getLedger(w.coach, w.a.id, { today: "2026-09-10" });
-    expect(ledger.dues.map((d) => [d.month, d.status, d.paid, d.pending])).toEqual([
-      ["2026-09", "cash_pending", 0, 2000],
-      ["2026-10", "due", 0, 1000],
-    ]);
-
-    await verifyPayment(w.admin, cash.id);
-    ledger = await getLedger(w.admin, w.a.id, { today: "2026-09-10" });
-    expect(ledger.dues.map((d) => [d.month, d.status])).toEqual([
-      ["2026-09", "paid"],
-      ["2026-10", "due"],
+    let ledger = await getLedger(w.admin, w.a.id, { today: "2026-09-10" });
+    expect(ledger.dues.map((d) => [d.month, d.status, d.paid])).toEqual([
+      ["2026-09", "paid", 2000],
+      ["2026-10", "due", 1000],
     ]);
 
     const paytm = await recordPayment(w.admin, { studentId: w.a.id, amount: "1000", method: "paytm", receivedAt: "2026-09-11", txnRef: "T123", idempotencyKey: "k2" }, { today: "2026-09-11" });
@@ -94,7 +90,9 @@ describe("payments", () => {
 
   it("re-opens dues when cash is rejected", async () => {
     const w = await world();
-    const p = await recordPayment(w.coach, { studentId: w.a.id, amount: "2000", method: "cash", receivedAt: "2026-09-10", idempotencyKey: "r1" }, { today: "2026-09-10" });
+    // Cash entered by a coach before 2026-10-13 can still be waiting for verification.
+    const p = await recordPayment(w.admin, { studentId: w.a.id, amount: "2000", method: "cash", receivedAt: "2026-09-10", idempotencyKey: "r1" }, { today: "2026-09-10" });
+    await db.update(payments).set({ status: "pending_verification", verifiedBy: null, verifiedAt: null }).where(eq(payments.id, p.id));
     expect(await listPendingCash(w.admin)).toHaveLength(1);
     await rejectPayment(w.admin, p.id, "Not received");
     expect(await listPendingCash(w.admin)).toHaveLength(0);
@@ -132,7 +130,8 @@ describe("adjustments & overview", () => {
   it("totals the month: due, collected by method, pending cash and overdue", async () => {
     const w = await world();
     await recordPayment(w.admin, { studentId: w.a.id, amount: "2000", method: "paytm", receivedAt: "2026-09-03", idempotencyKey: "o1" });
-    await recordPayment(w.coach, { studentId: w.b.id, amount: "400", method: "cash", receivedAt: "2026-09-17", idempotencyKey: "o2" }, { today: "2026-09-17" });
+    const pending = await recordPayment(w.admin, { studentId: w.b.id, amount: "400", method: "cash", receivedAt: "2026-09-17", idempotencyKey: "o2" }, { today: "2026-09-17" });
+    await db.update(payments).set({ status: "pending_verification", verifiedBy: null, verifiedAt: null }).where(eq(payments.id, pending.id));
     const o = await getMonthOverview(w.admin, "2026-09", {}, { today: "2026-09-30" });
     expect(o.totals).toEqual({ due: 3000, collected: 2000, collectedPaytm: 2000, collectedCash: 0, collectedRegister: 0, pending: 400, overdue: 600, students: 2 });
     expect(o.centers).toEqual([{ centerId: w.center.id, centerName: "OPG World School", due: 3000, collected: 2000, pending: 400, overdue: 600, students: 2 }]);

@@ -59,6 +59,11 @@ export async function assertActiveBatch(batchId: string, dbx: DbOrTx = db): Prom
   if (!b?.isActive) throw new AppError("VALIDATION", "Pick an active batch.", { batchId: ["Pick an active batch"] });
 }
 
+/** Coaches see the child and the batch only — never the family's contact details (2026-10-13). */
+function hideContactFromCoach<T extends { parentName: string | null; parentPhone: string | null }>(actor: Actor, row: T): T {
+  return actor.role === "admin" ? row : { ...row, parentName: null, parentPhone: null };
+}
+
 export async function listStudents(actor: Actor, filters: StudentFilters = {}): Promise<StudentListItem[]> {
   const ids = await accessibleBatchIds(actor);
   if (ids !== "all" && ids.length === 0) return [];
@@ -76,7 +81,7 @@ export async function listStudents(actor: Actor, filters: StudentFilters = {}): 
     if (digits.length >= 4) matches.push(like(students.parentPhone, `%${digits}%`));
     conds.push(or(...matches)!);
   }
-  return db
+  const rows = await db
     .select({
       id: students.id,
       name: students.name,
@@ -95,6 +100,7 @@ export async function listStudents(actor: Actor, filters: StudentFilters = {}): 
     .where(conds.length ? and(...conds) : undefined)
     .orderBy(asc(students.name))
     .limit(500);
+  return rows.map((r) => hideContactFromCoach(actor, r));
 }
 
 export async function getStudent(actor: Actor, id: string): Promise<StudentDetail> {
@@ -107,7 +113,9 @@ export async function getStudent(actor: Actor, id: string): Promise<StudentDetai
     .leftJoin(user, eq(user.id, batches.headCoachId))
     .where(eq(students.id, id))
     .limit(1);
-  return { ...row.student, batchName: row.batchName, centerId: row.centerId, centerName: row.centerName, headCoachName: row.headCoachName };
+  const detail = { ...row.student, batchName: row.batchName, centerId: row.centerId, centerName: row.centerName, headCoachName: row.headCoachName };
+  if (actor.role === "admin") return detail;
+  return { ...hideContactFromCoach(actor, detail), dob: null, notes: null, customFee: null, discountType: null, discountValue: null };
 }
 
 export async function createStudent(actor: Actor, input: StudentInput): Promise<{ id: string }> {

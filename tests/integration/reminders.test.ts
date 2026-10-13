@@ -35,10 +35,13 @@ describe("WhatsApp reminders", () => {
     expect(r).toMatchObject({ amount: 2000, months: ["2026-09"] });
   });
 
-  it("lets the head coach remind but not the assistant", async () => {
+  it("is for admins only — no coach can send or log reminders", async () => {
     const w = await world();
-    await expect(getReminder(w.coach, w.withPhone.id, { today: TODAY })).resolves.toBeTruthy();
-    await expect(getReminder(w.assistant, w.withPhone.id, { today: TODAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(getReminder(w.admin, w.withPhone.id, { today: TODAY })).resolves.toBeTruthy();
+    for (const coach of [w.coach, w.assistant]) {
+      await expect(getReminder(coach, w.withPhone.id, { today: TODAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(logReminder(coach, w.withPhone.id, "hi")).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
   });
 
   it("needs a parent phone and something outstanding", async () => {

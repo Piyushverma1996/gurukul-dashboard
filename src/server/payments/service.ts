@@ -22,6 +22,7 @@ export type RecordedPayment = { id: string; status: PaymentStatus; allocated: { 
  * Money fills unpaid months oldest-first, then future months (up to `advance_max_months`).
  */
 export async function recordPayment(actor: Actor, input: PaymentInput, ctx: Ctx = {}): Promise<RecordedPayment> {
+  requireAdmin(actor); // Fees are admin-only (2026-10-13): coaches never see or record money.
   const data = paymentInputSchema.parse(input);
 
   const [dupe] = await db.select({ id: payments.id, studentId: payments.studentId, status: payments.status }).from(payments).where(eq(payments.idempotencyKey, data.idempotencyKey)).limit(1);
@@ -31,13 +32,10 @@ export async function recordPayment(actor: Actor, input: PaymentInput, ctx: Ctx 
   }
 
   await requireStudentAccess(actor, data.studentId);
-  if (!isAdmin(actor) && data.method !== "cash") {
-    throw new AppError("FORBIDDEN", "Coaches can record cash only. Paytm payments are confirmed by Sharan.");
-  }
   const today = ctx.today ?? todayIST();
   if (data.receivedAt > today) throw new AppError("VALIDATION", "The payment date can't be in the future.", { receivedAt: ["Future date"] });
 
-  const status: PaymentStatus = isAdmin(actor) ? "verified" : "pending_verification";
+  const status: PaymentStatus = "verified";
   const currentMonth = today.slice(0, 7);
   const maxMonths = Number((await getSetting("advance_max_months")) ?? 12) || 12;
 
@@ -196,6 +194,7 @@ export type MyCashEntry = { id: string; studentName: string; amount: number; rec
 
 /** A coach's own recent cash entries (status visible so they know what Sharan decided). */
 export async function listMyCashEntries(actor: Actor): Promise<MyCashEntry[]> {
+  requireAdmin(actor);
   const rows = await db
     .select({ p: payments, studentName: students.name })
     .from(payments)

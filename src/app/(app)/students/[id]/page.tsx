@@ -30,28 +30,35 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
   });
   const isAdmin = user.role === "admin";
   const attendanceSummary = (await getStudentAttendance(user, s.id)).slice(0, 3);
-  const ledger = await getLedger(user, s.id);
+  const ledger = isAdmin ? await getLedger(user, s.id) : null;
   const today = todayIST();
   let reminder: Awaited<ReturnType<typeof getReminder>> | null = null;
-  if (s.parentPhone && ledger.totalOutstanding > 0 && (await isHeadCoachOf(user, s.batchId))) {
+  if (isAdmin && s.parentPhone && ledger && ledger.totalOutstanding > 0) {
     reminder = await getReminder(user, s.id).catch((e) => {
       if (e instanceof AppError) return null; // nothing due yet, etc.
       throw e;
     });
   }
   const discount = s.discountType ? (s.discountType === "flat" ? `${formatINR(s.discountValue ?? 0)} off` : `${s.discountValue}% off`) : "None";
-  const rows: [string, string][] = [
-    ["Parent", s.parentName ?? "Not added yet"],
-    ["Batch", `${s.batchName} · ${s.centerName}`],
-    ["Head coach", s.headCoachName ?? "Not assigned"],
-    ["Age group", AGE_LABELS[s.ageCategory]],
-    ["Date of birth", s.dob ? formatDateIN(s.dob) : "—"],
-    ["Joined", formatDateIN(s.joiningDate)],
-    ["Fee due day", `${s.feeDueDay} of each month`],
-    ["Custom fee", s.customFee != null ? formatINR(s.customFee) : "Uses fee plan"],
-    ["Discount", discount],
-    ["Data consent", s.consentGiven ? `Given${s.consentDate ? ` on ${formatDateIN(s.consentDate)}` : ""}` : "Not recorded"],
-  ];
+  const rows: [string, string][] = isAdmin
+    ? [
+        ["Parent", s.parentName ?? "Not added yet"],
+        ["Batch", `${s.batchName} · ${s.centerName}`],
+        ["Head coach", s.headCoachName ?? "Not assigned"],
+        ["Age group", AGE_LABELS[s.ageCategory]],
+        ["Date of birth", s.dob ? formatDateIN(s.dob) : "—"],
+        ["Joined", formatDateIN(s.joiningDate)],
+        ["Fee due day", `${s.feeDueDay} of each month`],
+        ["Custom fee", s.customFee != null ? formatINR(s.customFee) : "Uses fee plan"],
+        ["Discount", discount],
+        ["Data consent", s.consentGiven ? `Given${s.consentDate ? ` on ${formatDateIN(s.consentDate)}` : ""}` : "Not recorded"],
+      ]
+    : [
+        ["Batch", `${s.batchName} · ${s.centerName}`],
+        ["Head coach", s.headCoachName ?? "Not assigned"],
+        ["Age group", AGE_LABELS[s.ageCategory]],
+        ["Joined", formatDateIN(s.joiningDate)],
+      ];
 
   return (
     <>
@@ -105,7 +112,7 @@ export default async function StudentPage({ params }: { params: Promise<{ id: st
           {s.notes && <p className="mt-4 whitespace-pre-wrap rounded-md bg-surface p-3 text-sm">{s.notes}</p>}
         </CardContent>
       </Card>
-      <LedgerCard studentId={s.id} studentName={s.name} ledger={ledger} isAdmin={isAdmin} canRecordCash={s.status === "active"} today={today} />
+      {ledger && <LedgerCard studentId={s.id} studentName={s.name} ledger={ledger} isAdmin={isAdmin} canRecordCash={s.status === "active"} today={today} />}
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Attendance</CardTitle>
