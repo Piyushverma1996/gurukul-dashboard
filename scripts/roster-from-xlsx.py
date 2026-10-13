@@ -26,6 +26,8 @@ CENTRES = {
     "rd rajpal": "R.D. Rajpal School",
     "r.d. rajpal": "R.D. Rajpal School",
 }
+# Sharan's corrections where the workbook has an impossible date (2107/2027 typed for 2017).
+DOB_FIXES = {"Girik Nadella": "2017-06-14"}
 BATCHES = {"junior": "Junior 5-6pm", "senior": "Senior 6-7pm", "elite": "Elite 7-8pm", "morning": "Morning 6:30-7:30am"}
 
 
@@ -83,6 +85,8 @@ def main(src: str) -> None:
                 problems.append(f"{where}: unknown centre/batch — {norm(r[4])} / {norm(r[5])}")
                 continue
             birth, note = dob(r[2])
+            if name in DOB_FIXES:
+                birth, note = DOB_FIXES[name], ""
             if note:
                 problems.append(f"{where}: {note}")
             parent_phone = phone(r[8]) or phone(r[1])

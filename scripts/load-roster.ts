@@ -1,11 +1,12 @@
 // Loads centres, batches, fee plans and students from registers/roster/roster.csv (safe to re-run).
-// Usage: npm run db:load:roster  [-- path/to/roster.csv]
+// Usage: npm run db:load:roster  [-- path/to/roster.csv] [joining date, e.g. 2026-11-01]
 import { resolve } from "node:path";
 import { pool } from "@/server/db";
 import { loadRoster } from "@/server/roster";
 
 const csv = resolve(process.argv[2] ?? "registers/roster/roster.csv");
-const r = await loadRoster(csv);
+const joiningDate = process.argv[3];
+const r = await loadRoster(csv, joiningDate ? { joiningDate } : {});
 
 console.log(`Roster loaded from ${csv}`);
 console.log(`  batches: ${r.batchesCreated} created, ${r.batchesUpdated} updated`);

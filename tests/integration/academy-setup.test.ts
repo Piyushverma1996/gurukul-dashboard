@@ -15,8 +15,14 @@ describe("academy setup", () => {
     const junior = await makeBatch(playYard.id, { name: "Junior 5-6pm" });
     const senior = await makeBatch(playYard.id, { name: "Senior 6-7pm", ageCategory: "U15" });
 
+    const paper = await makeCenter({ name: "NK Bagrodia Public School", sector: "Sector 4" });
+    await makeBatch(paper.id, { name: "Junior 5-6pm" });
+
     const r = await applyAcademySetup();
 
+    // NK Bagrodia and R.D. Rajpal stay on paper, so they are removed from the app.
+    expect(r.centresRetired).toEqual(["NK Bagrodia Public School (removed)"]);
+    expect(await db.select().from(centers).where(eq(centers.id, paper.id))).toHaveLength(0);
     expect(r.centresRenamed).toEqual(["Play Yard → Play Yard Arena"]);
     expect((await db.select().from(centers).where(eq(centers.id, playYard.id)))[0].name).toBe("Play Yard Arena");
     expect(await getSetting("paytm_number")).toBe(SETTINGS_UPDATES.paytm_number);

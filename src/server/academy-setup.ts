@@ -5,7 +5,7 @@ import { toE164India } from "@/lib/phone";
 import type { StaffRole } from "@/lib/constants";
 import { writeAudit } from "./audit";
 import { db } from "./db";
-import { batchCoaches, batches, centers, user } from "./db/schema";
+import { batchCoaches, batches, centers, students, user } from "./db/schema";
 import { setSetting } from "./settings";
 import { insertStaffRecord } from "./staff/records";
 
@@ -16,7 +16,7 @@ export const CENTRE_RENAMES: Record<string, string> = {
 };
 
 export const SETTINGS_UPDATES = {
-  paytm_number: "sharansingh1997@okhdfcbank",
+  paytm_number: "sharansingh1997-2@okaxis",
   academy_whatsapp_number: "+919625573511",
   reminder_template:
     "Dear Parent, this is a reminder from Gurukul Football Academy. The monthly fee of ₹{amount} for {student_name} for {month} is due. Please pay by UPI to {paytm_number} or in cash to Coach {coach_name}. Reply to this message once paid.",
@@ -26,20 +26,25 @@ type CoachDef = { name: string; phone: string; role: StaffRole; centres: string[
 
 /** From the Coaches tab. The first head coach listed for a centre becomes the head coach of its batches. */
 export const COACHES: CoachDef[] = [
-  { name: "Deepanshu Bisht", phone: "9958976380", role: "head_coach", centres: ["Play Yard Arena", "R.D. Rajpal School"] },
+  { name: "Deepanshu Bisht", phone: "9958976380", role: "head_coach", centres: ["Play Yard Arena"] },
   { name: "Sanchit Sharma", phone: "9315808959", role: "head_coach", centres: ["OPG World School", "Bal Bharati School"] },
-  { name: "Mukesh Kumar", phone: "7678580219", role: "head_coach", centres: ["NK Bagrodia Public School"] },
   { name: "Arun Shokeen", phone: "9711234779", role: "head_coach", centres: ["OPG World School", "Play Yard Arena"] },
-  { name: "Anuj Kumar", phone: "8368558104", role: "assistant_coach", centres: ["NK Bagrodia Public School", "R.D. Rajpal School"] },
-  { name: "Aryan Sainik", phone: "9315537757", role: "assistant_coach", centres: ["NK Bagrodia Public School"] },
-  { name: "Monsoon", phone: "8799761655", role: "assistant_coach", centres: ["Play Yard Arena", "R.D. Rajpal School"] },
+  { name: "Monsoon", phone: "8799761655", role: "assistant_coach", centres: ["Play Yard Arena"] },
   { name: "Nikita Singh", phone: "9311429416", role: "assistant_coach", centres: ["OPG World School", "Bal Bharati School"] },
-  { name: "Puneet", phone: "9205229069", role: "assistant_coach", centres: ["NK Bagrodia Public School"] },
   { name: "Manoj", phone: "8800506741", role: "assistant_coach", centres: ["OPG World School"] },
   { name: "Prabhjot", phone: "6397135979", role: "admin", centres: [] }, // admins already see every centre
+  // NK Bagrodia and R.D. Rajpal stay on paper (2026-10-13), so their coaches get accounts but no batches:
+  { name: "Mukesh Kumar", phone: "7678580219", role: "head_coach", centres: [] },
+  { name: "Anuj Kumar", phone: "8368558104", role: "assistant_coach", centres: [] },
+  { name: "Aryan Sainik", phone: "9315537757", role: "assistant_coach", centres: [] },
+  { name: "Puneet", phone: "9205229069", role: "assistant_coach", centres: [] },
 ];
 
+/** Centres Sharan keeps on paper. Removed if empty, otherwise just switched off. */
+export const RETIRED_CENTRES = ["NK Bagrodia Public School", "R.D. Rajpal School"];
+
 export type SetupResult = {
+  centresRetired: string[];
   centresRenamed: string[];
   settingsUpdated: string[];
   coachesCreated: { name: string; phone: string; tempPassword: string }[];
@@ -52,7 +57,27 @@ export type SetupResult = {
 const tempPassword = () => `gfc-${Math.random().toString(36).slice(2, 7)}${Math.floor(Math.random() * 90 + 10)}`;
 
 export async function applyAcademySetup(): Promise<SetupResult> {
-  const r: SetupResult = { centresRenamed: [], settingsUpdated: [], coachesCreated: [], coachesUpdated: [], batchAssignments: 0, headCoachesSet: 0, warnings: [] };
+  const r: SetupResult = { centresRetired: [], centresRenamed: [], settingsUpdated: [], coachesCreated: [], coachesUpdated: [], batchAssignments: 0, headCoachesSet: 0, warnings: [] };
+
+  for (const name of RETIRED_CENTRES) {
+    const [centre] = await db.select({ id: centers.id }).from(centers).where(eq(centers.name, name)).limit(1);
+    if (!centre) continue;
+    const centreBatches = await db.select({ id: batches.id }).from(batches).where(eq(batches.centerId, centre.id));
+    const used = centreBatches.length
+      ? await db.select({ id: students.id }).from(students).where(inArray(students.batchId, centreBatches.map((b) => b.id))).limit(1)
+      : [];
+    if (used.length) {
+      await db.update(centers).set({ isActive: false }).where(eq(centers.id, centre.id));
+      r.centresRetired.push(`${name} (switched off; it still has students)`);
+      continue;
+    }
+    for (const b of centreBatches) {
+      await db.delete(batchCoaches).where(eq(batchCoaches.batchId, b.id));
+      await db.delete(batches).where(eq(batches.id, b.id));
+    }
+    await db.delete(centers).where(eq(centers.id, centre.id));
+    r.centresRetired.push(`${name} (removed)`);
+  }
 
   for (const [from, to] of Object.entries(CENTRE_RENAMES)) {
     const [row] = await db.select({ id: centers.id }).from(centers).where(eq(centers.name, from)).limit(1);

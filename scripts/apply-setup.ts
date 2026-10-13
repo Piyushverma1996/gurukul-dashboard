@@ -4,6 +4,7 @@ import { pool } from "@/server/db";
 import { applyAcademySetup } from "@/server/academy-setup";
 
 const r = await applyAcademySetup();
+console.log(`Centres retired: ${r.centresRetired.join(", ") || "none"}`);
 console.log(`Centres renamed: ${r.centresRenamed.join(", ") || "none"}`);
 console.log(`Settings updated: ${r.settingsUpdated.join(", ")}`);
 console.log(`Coaches updated: ${r.coachesUpdated.join(", ") || "none"}`);

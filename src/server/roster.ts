@@ -13,21 +13,11 @@ import { ensureDuesForMonth } from "./fees/service";
 
 type BatchDef = { name: string; ageCategory: AgeCategory; days: string; start: string; end: string };
 
-/** The live timetable from Sharan's centre message of 2026-10-05. */
+/** The live timetable (2026-10-13). NK Bagrodia and R.D. Rajpal stay on paper, so they are not here. */
 export const CENTRE_BATCHES: Record<string, BatchDef[]> = {
-  "NK Bagrodia Public School": [
-    { name: "Junior 5-6pm", ageCategory: "U12", days: "MON,WED,FRI", start: "17:00:00", end: "18:00:00" },
-    { name: "Senior 6-7pm", ageCategory: "U16", days: "MON,WED,FRI", start: "18:00:00", end: "19:00:00" },
-    { name: "Elite 7-8pm", ageCategory: "ELITE", days: "MON,WED,FRI", start: "19:00:00", end: "20:00:00" },
-  ],
   "Play Yard Arena": [
     { name: "Junior 5-6pm", ageCategory: "U8", days: "MON,WED,FRI", start: "17:00:00", end: "18:00:00" },
     { name: "Senior 6-7pm", ageCategory: "U15", days: "MON,WED,FRI", start: "18:00:00", end: "19:00:00" },
-  ],
-  "R.D. Rajpal School": [
-    { name: "Morning 6:30-7:30am", ageCategory: "U19", days: "MON,WED,FRI", start: "06:30:00", end: "07:30:00" },
-    { name: "Junior 5-6pm", ageCategory: "U12", days: "TUE,THU,SAT", start: "17:00:00", end: "18:00:00" },
-    { name: "Senior 6-7pm", ageCategory: "U19", days: "TUE,THU,SAT", start: "18:00:00", end: "19:00:00" },
   ],
   "Bal Bharati School": [
     { name: "Junior 5-6pm", ageCategory: "U12", days: "TUE,THU,SAT", start: "17:00:00", end: "18:00:00" },
@@ -41,9 +31,7 @@ export const CENTRE_BATCHES: Record<string, BatchDef[]> = {
 
 /** Standard monthly fee per centre. OPG's 3-day students get a ₹2500 custom fee from the roster. */
 export const CENTRE_FEES: Record<string, number> = {
-  "NK Bagrodia Public School": 2000,
   "Play Yard Arena": 2000,
-  "R.D. Rajpal School": 2000,
   "Bal Bharati School": 2000,
   "OPG World School": 3000,
 };
