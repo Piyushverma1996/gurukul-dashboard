@@ -29,6 +29,13 @@
       "when": 1791950000000,
       "tag": "0003_reminder_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1791960000000,
+      "tag": "0004_coach_checkins",
+      "breakpoints": true
     }
   ]
 }

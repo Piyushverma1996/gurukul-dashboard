@@ -1,9 +1,9 @@
-import { boolean, char, date, datetime, index, int, mysqlEnum, mysqlTable, primaryKey, text, time, tinyint, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
+import { boolean, char, date, datetime, decimal, index, int, mysqlEnum, mysqlTable, primaryKey, text, time, tinyint, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 import { ulid } from "ulid";
 // Relative import (not "@/"): drizzle-kit loads this file without tsconfig path aliases.
-import { ageCategories, attendanceStatuses, discountTypes, paymentMethods, paymentStatuses, staffRoles, studentStatuses } from "../../lib/constants";
+import { ageCategories, attendanceStatuses, checkinStatuses, discountTypes, paymentMethods, paymentStatuses, staffRoles, studentStatuses } from "../../lib/constants";
 
-export { ageCategories, attendanceStatuses, discountTypes, paymentMethods, paymentStatuses, staffRoles, studentStatuses };
+export { ageCategories, attendanceStatuses, checkinStatuses, discountTypes, paymentMethods, paymentStatuses, staffRoles, studentStatuses };
 export type { AgeCategory, AttendanceStatus, PaymentMethod, PaymentStatus, StaffRole, StudentStatus } from "../../lib/constants";
 
 // App-level defaults (no DB expression defaults) keep migrations portable between MySQL 8 and MariaDB.
@@ -84,6 +84,10 @@ export const centers = mysqlTable(
     sector: varchar("sector", { length: 40 }).notNull(),
     address: varchar("address", { length: 255 }),
     mapUrl: varchar("map_url", { length: 500 }),
+    /** Set by an admin standing at the ground; used for coach check-in. */
+    latitude: decimal("latitude", { precision: 9, scale: 6, mode: "number" }),
+    longitude: decimal("longitude", { precision: 9, scale: 6, mode: "number" }),
+    radiusM: int("radius_m").notNull().default(200),
     isActive: boolean("is_active").notNull().default(true),
     ...timestamps,
   },
@@ -120,6 +124,29 @@ export const batchCoaches = mysqlTable(
     createdAt: datetime("created_at", { mode: "date" }).notNull().$defaultFn(() => new Date()),
   },
   (t) => [primaryKey({ columns: [t.batchId, t.userId] }), index("batch_coaches_user_idx").on(t.userId)],
+);
+
+/** One row per coach, batch and day: when they arrived and how far from the ground. */
+export const coachCheckins = mysqlTable(
+  "coach_checkins",
+  {
+    id: ulidId(),
+    userId: varchar("user_id", { length: 36 }).notNull().references(() => user.id, { onDelete: "cascade" }),
+    batchId: char("batch_id", { length: 26 }).notNull().references(() => batches.id, { onDelete: "cascade" }),
+    sessionDate: date("session_date", { mode: "string" }).notNull(),
+    checkedInAt: datetime("checked_in_at", { mode: "date" }).notNull(),
+    latitude: decimal("latitude", { precision: 9, scale: 6, mode: "number" }),
+    longitude: decimal("longitude", { precision: 9, scale: 6, mode: "number" }),
+    accuracyM: int("accuracy_m"),
+    distanceM: int("distance_m"),
+    status: mysqlEnum("status", checkinStatuses).notNull().default("unknown"),
+    lateMinutes: int("late_minutes").notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("coach_checkins_user_batch_date_uq").on(t.userId, t.batchId, t.sessionDate),
+    index("coach_checkins_date_idx").on(t.sessionDate),
+  ],
 );
 
 export const students = mysqlTable(

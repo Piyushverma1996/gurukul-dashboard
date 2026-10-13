@@ -15,7 +15,9 @@ test("admin adds a student from a phone", async ({ page }) => {
   await page.getByLabel(/Parent has consented/).check();
   await page.getByRole("button", { name: "Save student" }).click();
   await expect(page.getByRole("heading", { name: "Test Kid" })).toBeVisible();
-  await expect(page.getByText("98100 00099")).toBeVisible();
+  // The number shows twice: as the parent's contact and as where fee reminders go.
+  await expect(page.getByText("98100 00099").first()).toBeVisible();
+  await expect(page.getByText("98100 00099 (parent)")).toBeVisible();
 });
 
 test("admin adds a coach and gets shareable credentials", async ({ page }) => {

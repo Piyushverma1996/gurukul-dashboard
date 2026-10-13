@@ -32,6 +32,14 @@ export const ROLE_LABELS: Record<StaffRole, string> = {
 export const paymentMethods = ["paytm", "cash", "register"] as const;
 export const paymentStatuses = ["pending_verification", "verified", "rejected"] as const;
 export const attendanceStatuses = ["present", "absent", "excused"] as const;
+/** Coach check-in: inside the centre's radius, outside it, or no location shared. */
+export const checkinStatuses = ["on_site", "off_site", "unknown"] as const;
+export type CheckinStatus = (typeof checkinStatuses)[number];
+export const CHECKIN_LABELS: Record<CheckinStatus, string> = {
+  on_site: "At the ground",
+  off_site: "Off-site",
+  unknown: "No location",
+};
 export type PaymentMethod = (typeof paymentMethods)[number];
 export type PaymentStatus = (typeof paymentStatuses)[number];
 export type AttendanceStatus = (typeof attendanceStatuses)[number];

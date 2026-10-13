@@ -149,6 +149,14 @@ Map pins are in `docs/academy/sharan-centre-details-2026-09-15.md`. Batch names 
 - **Students at NK Bagrodia, Play Yard Arena and R.D. Rajpal:** still no roster for these three centres.
 - **Centre names:** should "Play Yard" and "Bal Bharati Public School" be renamed to the brochure names ("Play Yard Sports", "Bal Bharati School")?
 
+## 5b. Roles after 2026-10-13
+
+- **Money is admin-only.** Fees, payments, reminders and the ledger require an admin; `/fees`, `/verify`, `/cash` and `/fees/reminders` 404 for coaches.
+- **Coaches see no family contact details** — no parent name, phone, date of birth, notes or fees. Their student list shows name, batch, age group and attendance.
+- **Fee reminders** go to `students.reminder_phone` when set, otherwise the parent's number. The app asks for it once, the first time a reminder is sent, and it can be changed on the student's page, in the student form or in the Google Sheet.
+- **Coach check-in:** coaches tap "Check in" on their home screen on session days. The app stores the time, the distance from the centre (`centers.latitude/longitude/radius_m`, set by an admin with "Use my location") and how late they were. Beyond the radius is "off-site", more than 10 minutes late is "late", and nothing is ever blocked. Admins see each coach's last 30 days on the coach's page.
+- **Home screens differ by role:** admins get a switchboard (Students · Fees · Attendance · Coaches · Centres · Settings) plus what needs attention; coaches get today's sessions with Mark attendance and Check in.
+
 ## 6. Architecture
 
 | Layer | Choice |
