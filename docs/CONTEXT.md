@@ -98,7 +98,7 @@ The full rules are in the design spec, §6 (fees), §7 (attendance), §8 (remind
 **Money and time:** amounts are stored as whole rupees, and all dates use Asia/Kolkata time.
 
 **Google Sheet sync:**
-- **Where:** sheet "Gurukul Dashboard — Data", owned by the Gurukul Gmail account and shared only with the service account.
+- **Where:** one sheet only — "APP Gurukul Dashboard — Data" (`1hn5AmlsvQTeTJcuMiwxtY-DO8JVp9IPUthChcGBwzSY`), owned by the Gurukul Gmail account and shared with Sharan, Piyush and the service account. Sharan's separate "information still needed" file was folded into it on 2026-10-13 as the "Reference – …" tabs and is no longer used. Downloaded copies of both, plus the master database workbook, are in `registers/sheet-backups/`.
 - **What syncs both ways:** the "Students – ‹Centre›" tabs. Sharan fills in parent details there, and a row with an empty ID becomes a new student.
 - **Conflicts:** if the same field changed in both places, **the app wins** and the row's "Sync note" says so.
 - **Invalid values:** flagged in the Sync note and ignored.
