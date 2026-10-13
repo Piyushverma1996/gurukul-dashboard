@@ -121,14 +121,23 @@ export function toRow(id: string, fields: SheetFields, readOnly: { feeStatus: st
   return STUDENT_COLUMNS.map((c) => all[c.key]);
 }
 
-/** Reads by header name, so Sharan can reorder columns; falls back to the default position. */
+/**
+ * Reads by header name, so Sharan can reorder columns. Positions are only used when the
+ * sheet has no header row at all: guessing by position after a new column is added reads
+ * the neighbouring column's value (it once wrote dates of birth into the reminder number).
+ */
 export function parseRow(header: string[], row: string[]): { id: string; fields: SheetFields } {
+  const titled = header.some((h) => h.trim() !== "");
   const index = (key: ColumnKey) => {
     const def = STUDENT_COLUMNS.findIndex((c) => c.key === key);
     const found = header.indexOf(STUDENT_COLUMNS[def].header);
-    return found >= 0 ? found : def;
+    if (found >= 0) return found;
+    return titled ? -1 : def;
   };
-  const get = (key: ColumnKey) => String(row[index(key)] ?? "").trim();
+  const get = (key: ColumnKey) => {
+    const i = index(key);
+    return i < 0 ? "" : String(row[i] ?? "").trim();
+  };
   const fields = Object.fromEntries(EDITABLE_KEYS.map((k) => [k, get(k)])) as SheetFields;
   return { id: get("id"), fields };
 }

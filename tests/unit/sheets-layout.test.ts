@@ -38,6 +38,18 @@ describe("sheet layout", () => {
     expect(studentTabName("OPG World School")).toBe("Students – OPG World School");
   });
 
+  it("leaves a column blank when the sheet doesn't have it yet", () => {
+    // A sheet written before "Send fee reminders to" existed: the old date-of-birth value
+    // sits where that column now belongs, and must not be read as a phone number.
+    const header = STUDENT_COLUMNS.filter((c) => c.key !== "reminderPhone").map((c) => c.header);
+    const row = ["01ABC", "Siyan", "Junior 4-5pm", "Rohit", "98765 43210", "31/03/2016", "U10", "01/09/2026", "1", "", "", "", "Yes", "active", ""];
+    const { id, fields } = parseRow(header, row);
+    expect(id).toBe("01ABC");
+    expect(fields.reminderPhone).toBe("");
+    expect(fields.dob).toBe("31/03/2016");
+    expect(fields.parentPhone).toBe("98765 43210");
+  });
+
   it("writes and reads rows by header name (columns may be rearranged)", () => {
     const fields = studentToFields(student);
     const row = toRow("01J0000000000000000000000A", fields, { feeStatus: "Paid", attendance: "75%", syncNote: "" });
